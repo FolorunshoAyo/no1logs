@@ -31,6 +31,7 @@ Route::namespace('User\Auth')->name('user.')->group(function () {
         Route::get('social-login/{provider}', 'socialLogin')->name('social.login');
         Route::get('social-login/callback/{provider}', 'callback')->name('social.login.callback');
     });
+    
 });
 
 Route::middleware('auth')->name('user.')->group(function () {
@@ -51,6 +52,9 @@ Route::middleware('auth')->name('user.')->group(function () {
 
             Route::controller('UserController')->group(function(){
                 Route::get('dashboard', 'home')->name('home');
+
+                Route::get('api/docs', 'apiHome')->name('api');
+                Route::post('/generate-key', 'apiGenerate')->name('generate.key');
 
                 //Report
                 Route::any('payment/history', 'depositHistory')->name('deposit.history');

@@ -73,5 +73,8 @@ class Kernel extends HttpKernel
         'demo' => \App\Http\Middleware\Demo::class,
         'registration.complete' => \App\Http\Middleware\RegistrationStep::class,
         'maintenance' => \App\Http\Middleware\MaintenanceMode::class,
+
+        'sanitize' => \App\Http\Middleware\SanitizeInput::class,
+        'api.token' => \App\Http\Middleware\ValidateApiToken::class,
     ];
 }

@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\User\Auth;
 
-use App\Constants\Status;
-use App\Http\Controllers\Controller;
-use App\Models\AdminNotification;
 use App\Models\User;
+use App\Constants\Status;
 use App\Models\UserLogin;
 use App\Models\UserWallet;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\AdminNotification;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Foundation\Auth\RegistersUsers;
 
 class RegisterController extends Controller
 {
@@ -123,6 +124,7 @@ class RegisterController extends Controller
         $user->username = $data['username'];
         $user->ref_by = $referUser ? $referUser->id : 0;
         $user->country_code = $data['country_code'];
+        $user->api_token = Str::random(20);
         $user->mobile = $data['mobile_code'].$data['mobile'];
         $user->address = [
             'address' => '',

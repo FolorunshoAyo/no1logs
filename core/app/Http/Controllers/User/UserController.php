@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\User;
 
-use App\Http\Controllers\Controller;
-use App\Models\Deposit;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\SupportTicket;
-use App\Models\UserWallet;
-use App\Models\WalletHistory;
-use Illuminate\Http\Request;
-use JsonStringfy\JsonStringfy\Activereq\Activeck\WTC;
 use Status;
+use App\Models\Order;
+use App\Models\Deposit;
+use App\Models\OrderItem;
+use App\Models\UserWallet;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\SupportTicket;
+use App\Models\WalletHistory;
+use App\Http\Controllers\Controller;
+use JsonStringfy\JsonStringfy\Activereq\Activeck\WTC;
 
 class UserController extends Controller
 {
@@ -29,6 +30,31 @@ class UserController extends Controller
 
         return view($this->activeTemplate . 'user.dashboard', compact('pageTitle', 'user', 'widget', 'latestDeposits'));
     } 
+
+    public function apiHome()
+    {
+        $pageTitle = 'API Docs';
+        $user = auth()->user();
+
+        // Create API-Token for existing users
+        if(!$user->api_token){
+            $user->api_token = Str::random(20);
+            $user->save();
+        }
+
+        $api_token = $user->api_token;
+
+        // return view($this->activeTemplate . 'user.api_docs', compact('pageTitle', 'user', 'widget', 'latestDeposits'));
+        return view($this->activeTemplate . 'user.api_docs', compact('pageTitle', 'user', 'api_token'));
+    }
+
+    public function apiGenerate()
+    {
+        $user = auth()->user();
+        $user->api_token = Str::random(20);
+        $user->save();
+        return $user->api_token;
+    }
 
     public function depositHistory(Request $request)
     {
