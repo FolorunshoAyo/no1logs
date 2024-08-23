@@ -14,7 +14,7 @@ class WalletHistory extends Model
     protected $table = 'wallet_history';
     
     protected $fillable = [
-        'wallet_id', 'order_id', 'transaction_type', 'final_amo', 'amount', 'status', 'created_at', 'updated_at'
+        'wallet_id', 'order_id', 'transaction_type', 'trx', 'api_trx_id', 'api_provider_id', 'final_amo', 'amount', 'status', 'created_at', 'updated_at'
     ];
 
     public function user()
@@ -30,6 +30,10 @@ class WalletHistory extends Model
     public function order(){
         return $this->belongsTo(Order::class);
     }
+
+    public function apiProvider(){
+        return $this->belongsTo(ApiProvider::class, 'api_provider_id', 'id');
+    } 
 
     public function gateway()
     {

@@ -44,7 +44,7 @@
 
                                 <td>
                                     <span class="fw-bold">
-                                    {{ {{ !isset($user->wallet->balance)? "Wallet Not Created" : $general->cur_sym . " " . showAmount($user->wallet->balance) }} }}
+                                    {{ !isset($user->wallet->balance)? "Wallet Not Created" : $general->cur_sym . " " . showAmount($user->wallet->balance) }}
                                     </span>
                                 </td>
 

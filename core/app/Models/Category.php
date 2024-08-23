@@ -14,5 +14,9 @@ class Category extends Model
     public function products(){
         return $this->hasMany(Product::class);
     }
+
+    public function apiProvider(){
+        return $this->belongsTo(ApiProvider::class, 'api_provider_id', 'id');
+    }  
     
 }

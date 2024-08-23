@@ -36,7 +36,7 @@
                                     </td>
                                     <td>
                                         <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline--primary dropdown-toggle id="actionButton" data-bs-toggle="dropdown">
+                                            <button class="btn btn-sm btn-outline--primary dropdown-toggle" id="actionButton" data-bs-toggle="dropdown">
                                                 <i class="las la-ellipsis-v"></i>@lang('Action')
                                             </button>
                                             <div class="dropdown-menu p-0">

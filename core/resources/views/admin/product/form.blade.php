@@ -67,24 +67,26 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-lg-6">
-                                            <div class="form-group">
-                                                <div class="justify-content-between d-flex flex-wrap">
-                                                    <span>
-                                                        <label>@lang('Accounts')</label>
-                                                        <i class="las la-info-circle text--primary" title=""
-                                                            data-bs-original-title="@lang('The document must be in .txt format, with each account separated by a new line. You can download a demo template to understand the formatting')"
-                                                            aria-label="@lang('The document must be in .txt format, with each account separated by a new line. You can download a demo .txt to understand the formatting')">
-                                                        </i>
-                                                    </span>
-                                                    <a href="{{ route('admin.product.download.demo.txt') }}" class="">
-                                                        <i class="las la-download"></i>@lang('Demo Format')
-                                                    </a>
+                                        @if($product->api_provider_id === null)
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    <div class="justify-content-between d-flex flex-wrap">
+                                                        <span>
+                                                            <label>@lang('Accounts')</label>
+                                                            <i class="las la-info-circle text--primary" title=""
+                                                                data-bs-original-title="@lang('The document must be in .txt format, with each account separated by a new line. You can download a demo template to understand the formatting')"
+                                                                aria-label="@lang('The document must be in .txt format, with each account separated by a new line. You can download a demo .txt to understand the formatting')">
+                                                            </i>
+                                                        </span>
+                                                        <a href="{{ route('admin.product.download.demo.txt') }}" class="">
+                                                            <i class="las la-download"></i>@lang('Demo Format')
+                                                        </a>
+                                                    </div>
+                                                    <input type="file" name="file" class="form-control"
+                                                        accept="text/plain" @if (!@$product) required @endif>
                                                 </div>
-                                                <input type="file" name="file" class="form-control"
-                                                    accept="text/plain" @if (!@$product) required @endif>
                                             </div>
-                                        </div>
+                                        @endif
                                         <div class="col-lg-12">
                                             <div class="form-group">
                                                 <label>@lang('Description') </label>

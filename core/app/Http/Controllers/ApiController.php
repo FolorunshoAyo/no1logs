@@ -5,16 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Language;
 use App\Constants\Status;
 use App\Models\OrderItem;
-use App\Models\Subscriber;
 use Illuminate\Http\Request;
 use App\Models\ProductDetail;
 use App\Models\WalletHistory;
-use App\Models\AdminNotification;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Validator;
 
 class ApiController extends Controller
 {

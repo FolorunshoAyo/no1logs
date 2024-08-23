@@ -115,6 +115,20 @@ function showAmount($amount, $decimal = 2, $separate = true, $exceptZeros = fals
     return $printAmount;
 }
 
+function format_currency($amount, $hasSymbol = false){
+    if($hasSymbol){
+        return removeCurrencySymbol($amount) / gs('cur_rate');
+    }else{
+        return $amount / gs('cur_rate');
+    }
+}
+
+function removeCurrencySymbol($string) {
+    $cleanedString = preg_replace('/[\p{Sc}]/u', '', $string);
+    $cleanedString = preg_replace('/[^\d.]/', '', $cleanedString);
+
+    return $cleanedString;
+}
 
 function removeElement($array, $value)
 {
@@ -124,6 +138,19 @@ function removeElement($array, $value)
 function cryptoQR($wallet)
 {
     return "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=$wallet&choe=UTF-8";
+}
+
+// curl get
+function curl_get($url){
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    $data = curl_exec($ch);
+    curl_close($ch);
+    return $data;
 }
 
 
@@ -144,6 +171,18 @@ function strLimit($title = null, $length = 10)
     return Str::limit($title, $length);
 }
 
+function maskHalfText($input) {
+    $length = strlen($input);
+
+    $halfLength = intval($length / 2);
+
+    $firstHalf = substr($input, 0, $halfLength);
+    $secondHalf = substr($input, $halfLength);
+
+    $maskedSecondHalf = str_repeat('*', strlen($secondHalf));
+    
+    return $firstHalf . $maskedSecondHalf;
+}
 
 function getIpInfo()
 {

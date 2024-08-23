@@ -61,11 +61,15 @@ class ProductController extends Controller{
     	];
 
 		if($update){
+			if($request->hasFile('file')){
+				$rule['file'] = ['nullable', new FileTypeValidate(['txt'])];
+			}
 			$rule['id'] = 'required|integer';
-			$rule['file'] = ['nullable', new FileTypeValidate(['txt'])];
 			$rule['image'] = ['nullable','image',new FileTypeValidate(['jpg','jpeg','png'])];
 		}else{
-			$rule['file'] = ['required', new FileTypeValidate(['txt'])];
+			if($request->hasFile('file')){
+				$rule['file'] = ['nullable', new FileTypeValidate(['txt'])];
+			}
 			$rule['image'] = ['required','image',new FileTypeValidate(['jpg','jpeg','png'])];
 		}
 

@@ -40,21 +40,24 @@ class ReportController extends Controller
     }
 
     public function orderHistory(Request $request){ 
-        $pageTitle = 'Order History';
+        $pageTitle = 'Order History Excluding API';
 
-        $orders = Order::searchable(['user:username', 'deposit:trx'])
+        $orders = Order::searchable(['user:username'])
             ->filter(['status'])
             ->dateFilter()
             ->orderBy('id','desc')
-            ->with('user', 'deposit', 'orderItems')
+            ->with('user', 'deposit', 'wallet', 'orderItems')
+            ->whereDoesntHave('wallet', function ($query) {
+                $query->whereNotNull('api_trx_id');
+            })
         ->paginate(getPaginate());
 
         return view('admin.reports.order_history', compact('pageTitle', 'orders'));
     }
  
     public function orderDetails($id){ 
-        $order = Order::findOrFail($id);
-        $pageTitle = "Order Details - {$order->deposit->trx}";
+        $order = Order::with('deposit', 'wallet')->findOrFail($id);
+        $pageTitle = "Order Details - " . (!empty($order->deposit->trx)? $order->deposit->trx : (!empty($order->wallet->trx)? $order->wallet->trx : "Wallet Payment"));
 
         $items = @$order->orderItems->pluck('product_detail_id')->toArray() ?? [];
         $accounts = ProductDetail::whereIn('id', $items)->searchable(['details'])->orderBy('id', 'DESC')->paginate(getPaginate());

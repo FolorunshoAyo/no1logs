@@ -66,6 +66,22 @@ Route::middleware('admin')->group(function () {
         Route::get('/download/demo/txt', 'downloadDemoTxt')->name('download.demo.txt');
     });
 
+    // API CONNECTION  
+    Route::controller('ManageApiController')->prefix('api')->name('api.')->group(function(){
+        Route::get('/', 'home')->name('all');
+        Route::post('update-general-settings', 'updateGeneralSettings')->name('update.general-settings');
+        Route::get('new', 'new')->name('new');
+        Route::post('add', 'add')->name('add');
+        Route::get('detail/{id}', 'detail')->name('detail');
+        Route::post('update/{id}', 'update')->name('update');
+        Route::post('delete/{id}', 'delete')->name('delete');
+        Route::post('status/{id}', 'status')->name('status');
+        Route::get('accounts/{id}', 'accounts')->name('accounts');
+        Route::post('delete/account/{id}', 'deleteAccount')->name('delete.account');
+        Route::post('update/account', 'updateAccount')->name('update.account');
+        Route::get('/download/demo/txt', 'downloadDemoTxt')->name('download.demo.txt');
+    });
+
     // Users Manager
     Route::controller('ManageUsersController')->name('users.')->prefix('users')->group(function(){
         Route::get('/', 'allUsers')->name('all');

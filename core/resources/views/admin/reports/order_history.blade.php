@@ -12,7 +12,7 @@
                 <form action="">
                     <div class="d-flex flex-wrap gap-4">
                         <div class="flex-grow-1">
-                            <label>@lang('TRX/Username')</label>
+                            <label>@lang('Username')</label>
                             <input type="text" name="search" value="{{ request()->search }}" class="form-control">
                         </div>
                         <div class="flex-grow-1">
@@ -66,10 +66,17 @@
 
                                     <td>
                                         <div>
-                                            <div class="fw-bold">{{ $order->deposit->trx }}</div>
-                                            <a href="{{ route('admin.deposit.details', $order->deposit->id) }}">
-                                                @lang('View Details')
-                                            </a>
+                                            <div class="fw-bold">{{ $order->deposit->trx ?? "Wallet Payment" }}</div>
+                                            @if(isset($order->deposit->trx))
+                                                <a href="{{ route('admin.deposit.details', $order->deposit->id) }}?source=deposit">
+                                                    @lang('View Details')
+                                                </a>
+                                            @endif
+                                            @if(isset($order->wallet->trx))
+                                                <a href="{{ route('admin.deposit.details', $order->wallet->id) }}?source=wallet">
+                                                    @lang('View Details')
+                                                </a>
+                                            @endif
                                         </div>
                                     </td>
 

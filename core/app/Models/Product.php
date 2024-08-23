@@ -22,6 +22,10 @@ class Product extends Model
     public function user(){
         return $this->belongsTo(User::class);
     }  
+
+    public function apiProvider(){
+        return $this->belongsTo(ApiProvider::class, 'api_provider_id', 'id');
+    }  
     
     public function productDetails(){
         return $this->hasMany(ProductDetail::class);
