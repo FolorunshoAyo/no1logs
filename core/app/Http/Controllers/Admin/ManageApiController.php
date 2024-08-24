@@ -268,4 +268,107 @@ class ManageApiController extends Controller
         $notify[] = ['success', 'API details updated successfully'];
         return back()->withNotify($notify);
     }
+
+    public function apiCronJob(){
+        if(time() > gs('check_api_cron_time')){
+            if((time() - gs('check_api_cron_time')) < 5){
+                return [
+                    'error' => 'The operation is too fast'
+                ];
+            }
+        }
+
+        ugs('check_api_cron_time', time());
+
+        if(gs('status_connect_api') === 1){
+            $purifier = new \HTMLPurifier();
+            $apiProviders = ApiProvider::where('status', 1)->get();
+
+            foreach($apiProviders as $apiProvider){
+                if($apiProvider->type === "CMSNT"){
+                    $getBalance = curl_get($apiProvider->domain ."/api/GetBalance.php?username=".$apiProvider->username."&password=".$apiProvider->password);
+                    $price = format_currency($getBalance, true);
+                    if(isset($data['status']) && $data['status'] == 'error'){
+                        return;
+                    }
+                    $apiProvider->balance = $price;
+                    $apiProvider->save();
+
+                    // List all active products from api and store in database
+                    $getProducts = curl_get($apiProvider->domain ."/api/ListResource.php?username=".$apiProvider->username.'&password='.$apiProvider->password);
+                    $data = json_decode($getProducts, true);
+                    if($data['status'] == 'success'){
+                        foreach($data['categories'] as $category){
+                            $categoryConditions = [
+                                'api_id' => $category['id'],
+                                'api_provider_id' => $apiProvider->id,
+                            ];
+
+                            $existingCategory = Category::where($categoryConditions)->first();
+
+                            if(!$existingCategory){
+                                $productImage = remoteFileUploader($category['image'], getFilePath('product'), getFileSize('product'));
+                            }
+                        
+                            $categoryRecord = Category::updateOrCreate(
+                                $categoryConditions,
+                                [
+                                    'status' => gs("default_api_product_status"),
+                                    'name' => $category['name'],
+                                    'api_id' => $category['id'],
+                                    'api_provider_id' => $apiProvider->id
+                                ]
+                            );
+                            
+                           foreach($category['accounts'] as $product){
+                                $product_name = htmlspecialchars_decode($purifier->purify($product['name']));
+                                $ck = (float) htmlspecialchars_decode($purifier->purify($product['price'])) * $apiProvider->ck_connect_api / 100;
+                                $price = (float) htmlspecialchars_decode($purifier->purify($product['price'])) + $ck;
+
+                                $category_id = $categoryRecord->id;
+                                $productConditions = [
+                                    'api_id' => $product['id'],
+                                    'api_provider_id' => $apiProvider->id,
+                                ];
+
+                                $existingProduct = Product::where($productConditions)->first(); 
+
+                                if($existingProduct){
+                                    $existingProduct->update([
+                                        'category_id' => $category_id,
+                                        'name' => $product_name,
+                                        'description' => htmlspecialchars_decode($purifier->purify($product['description'])),
+                                        'price' => format_currency($price),
+                                        'api_price' => format_currency($product['price']),
+                                        'status' => gs("default_api_product_status"),
+                                        'api_id' => $product['id'],
+                                        'api_provider_id' => $apiProvider->id,
+                                        'api_stock' => $product['amount'],
+                                        'name_api' => $product_name
+                                    ]);
+                                }else{
+                                    Product::create(
+                                        [
+                                            'category_id' => $category_id,
+                                            'name' => $product_name,
+                                            'description' => htmlspecialchars_decode($purifier->purify($product['description'])),
+                                            'price' => format_currency($price),
+                                            'api_price' => format_currency($product['price']),
+                                            'image' => $productImage,
+                                            'status' => gs("default_api_product_status"),
+                                            'api_id' => $product['id'],
+                                            'api_provider_id' => $apiProvider->id,
+                                            'api_stock' => $product['amount'],
+                                            'name_api' => $product_name
+                                        ]
+                                    );
+                                }
+                           }
+                        //    return $productImage;
+                        }
+                    }
+                }
+            }  
+        }
+    } 
 }

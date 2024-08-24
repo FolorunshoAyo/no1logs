@@ -1,17 +1,18 @@
 <?php
 
-use App\Constants\Status;
-use App\Models\Extension;
-use App\Models\Frontend;
-use App\Models\GeneralSetting;
 use Carbon\Carbon;
 use App\Lib\Captcha;
+use App\Notify\Notify;
 use App\Lib\ClientInfo;
 use App\Lib\CurlRequest;
 use App\Lib\FileManager;
-use App\Notify\Notify;
-use Illuminate\Support\Facades\Cache;
+use App\Models\Frontend;
+use App\Constants\Status;
+use App\Models\Extension;
 use Illuminate\Support\Str;
+use App\Models\GeneralSetting;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 function systemDetails()
 {
@@ -127,7 +128,7 @@ function removeCurrencySymbol($string) {
     $cleanedString = preg_replace('/[\p{Sc}]/u', '', $string);
     $cleanedString = preg_replace('/[^\d.]/', '', $cleanedString);
 
-    return $cleanedString;
+    return (int) $cleanedString;
 }
 
 function removeElement($array, $value)
@@ -153,6 +154,16 @@ function curl_get($url){
     return $data;
 }
 
+//curl get 2
+function curl_get2($url){
+    $arrContextOptions=array(
+        "ssl"=>array(
+            "verify_peer"=>false,
+            "verify_peer_name"=>false,
+        ),
+    ); 
+    return file_get_contents($url, false, stream_context_create($arrContextOptions));
+}
 
 function keyToTitle($text)
 {
@@ -302,6 +313,22 @@ function fileUploader($file, $location, $size = null, $old = null, $thumb = null
     $fileManager->thumb = $thumb;
     $fileManager->upload();
     return $fileManager->filename;
+}
+
+function remoteFileUploader($url, $location, $size = null, $old = null, $thumb = null){
+    $response = Http::get($url);
+    if ($response->successful()) {
+        $file = $response->body();
+        $fileManager = new FileManager($file);
+        $fileManager->path = $location;
+        $fileManager->size = $size;
+        $fileManager->old = $old;
+        $fileManager->thumb = $thumb;
+        $fileManager->fetchRemoteImage();
+        return $fileManager->filename;
+    }else{
+        return "favicon.png";
+    }
 }
 
 function fileManager()
@@ -458,6 +485,22 @@ function gs($key = null)
     }
     if ($key) return @$general->$key;
     return $general;
+}
+
+function ugs($key, $value)
+{
+    // Find the existing GeneralSetting record or create a new one
+    $general = GeneralSetting::first();
+    if ($general) {
+        $general->$key = $value;
+        $general->save();
+        Cache::put('GeneralSetting', $general);
+
+        return $general;
+    }else{
+        return null;
+    }
+
 }
 
 function isImage($string){

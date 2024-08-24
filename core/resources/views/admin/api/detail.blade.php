@@ -246,7 +246,7 @@
                                                         <a href="javascript:void(0)" class="dropdown-item editBtn" data-data="{{ $data }}">
                                                             <i class="la la-pencil"></i> @lang('Edit')
                                                         </a>
-                                                        @if($category->status == Status::ENABLE)
+                                                        @if($data->status == Status::ENABLE)
                                                             <a href="javascript:void(0)" 
                                                                 class="dropdown-item confirmationBtn"
                                                                 data-action="{{ route('admin.category.status', $data->id) }}"
@@ -303,8 +303,8 @@
                                                 <span class="small d-block">Category: {{ __(@$data->category->name) }}</span>
                                             </td>
                                             <td> 
-                                                Selling Price: <span class="fw-bold">{{ showAmount($data->price) }} {{ __($general->cur_text) }}</span>
-                                                API Price: {{ showAmount($data->api_price) }} {{ __($general->cur_text) }}
+                                                <span class="d-block">Selling Price: <span class="fw-bold">{{ showAmount($data->price) }} {{ __($general->cur_text) }}</span></span>
+                                                <span class="d-block">API Price: {{ showAmount($data->api_price) }} {{ __($general->cur_text) }}</span>
                                             </td>
                                             <td>
                                                 <span class="bg--primary px-2 rounded text--white">
@@ -312,7 +312,7 @@
                                                 </span>
                                             </td>
                                             <td> 
-                                            @php echo $product->statusBadge; @endphp
+                                            @php echo $data->statusBadge; @endphp
                                             </td>
                                             <td>
                                                 <div class="dropdown">
@@ -323,7 +323,7 @@
                                                         <a href="{{ route('admin.product.form', $data->id) }}" class="dropdown-item">
                                                             <i class="la la-pencil"></i> @lang('Edit')
                                                         </a>
-                                                        @if($product->status == Status::ENABLE)
+                                                        @if($data->status == Status::ENABLE)
                                                             <a href="javascript:void(0)" class="dropdown-item confirmationBtn"
                                                                 data-action="{{ route('admin.product.status', $data->id) }}"
                                                                 data-question="@lang('Are you sure to disable this item?')">
@@ -358,10 +358,11 @@
                 </div>
             @else
                 <div class="mt-3">
-                    <div class="show-filter mb-3 text-end">
+                    {{-- <div class="show-filter mb-3 text-end"> --}}
+                    <div class="mb-3 text-end">
                         <button type="button" class="btn btn-outline--primary showFilterBtn btn-sm"><i class="las la-filter"></i> @lang('Filter')</button>
                     </div>
-                    <div class="card responsive-filter-card mb-4">
+                    <div class="card responsive-filter-card mb-4" style="display: none;">
                         <div class="card-body">
                             <form action="">
                                 <div class="d-flex flex-wrap gap-4">
@@ -387,7 +388,7 @@
                                     <thead>
                                         <tr>
                                             <th>@lang('User')</th>
-                                            <th>@lang('Payment Trx')</th>
+                                            <th>@lang('Payment Trx | Info')</th>
                                             <th>@lang('Ordered At')</th>
                                             <th>@lang('Amount')</th>
                                             <th>@lang('Quantity')</th>
@@ -396,43 +397,56 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse($orders as $order)
+                                        @forelse($allData as $data)
                                             @php 
-                                                $qty = @$order->orderItems->count();
-                                                $perUnitPrice = @$order->orderItems->first()->price;
+                                                $qty = @$data->orderItems->count();
+                                                $perUnitPrice = @$data->orderItems->first()->price;
                                             @endphp
                                             <tr>
                                                 <td>
-                                                    <span class="fw-bold">{{ $order->user->fullname }}</span>
+                                                    <span class="fw-bold">{{ $data->user->fullname }}</span>
                                                     <br>
-                                                    <span class="small"> <a href="{{ appendQuery('search',$order->user->username) }}"><span>@</span>{{ $order->user->username }}</a> </span>
+                                                    <span class="small"> <a href="{{ appendQuery('search',$data->user->username) }}"><span>@</span>{{ $data->user->username }}</a> </span>
                                                 </td>
             
                                                 <td>
                                                     <div>
-                                                        <div class="fw-bold">{{ $order->deposit->trx ?? "Wallet Payment" }}</div>
-                                                        @if(isset($order->deposit->trx))
-                                                            <a href="{{ route('admin.deposit.details', $order->deposit->id) }}?source=deposit">
-                                                                @lang('View Details')
-                                                            </a>
+                                                        @if(isset($data->wallet->trx))
+                                                            <span class="d-block">Transaction Code: {{ $data->wallet->trx }}</span>
                                                         @endif
-                                                        @if(isset($order->wallet->trx))
-                                                            <a href="{{ route('admin.deposit.details', $order->wallet->id) }}?source=wallet">
-                                                                @lang('View Details')
-                                                            </a>
+                                                        @if(isset($data->wallet->api_trx_id))
+                                                            <span class="d-block">API Transaction Code: {{ $data->wallet->api_trx_id }}</span>
                                                         @endif
+                                                        <span class="d-block">Product: {{ $data->orderItems->firstItem()->product->name }}</span>
+                                                        <span class="d-block">Product: {{ $data->orderItems->firstItem()->product->name }}</span>
                                                     </div>
                                                 </td>
             
                                                 <td>
-                                                    {{ showDateTime($order->created_at) }}<br>{{ diffForHumans($order->created_at) }}
+                                                    {{ showDateTime($data->created_at) }}<br>{{ diffForHumans($data->created_at) }}
                                                 </td>
             
                                                 <td class="budget">
                                                     <span class="d-block">{{ $qty }} @lang('Qty') x {{ showAmount($perUnitPrice) }} {{ __($general->cur_text) }}</span>
                                                     <span class="fw-bold">
-                                                        {{showAmount($order->total_amount)}} {{ __($general->cur_text) }}
+                                                        Payment: {{showAmount($data->total_amount)}} {{ __($general->cur_text) }}
                                                     </span>
+                                                    @php
+                                                        $apiCost = $data->orderItems->firstItem()->product->api_price * $qty;
+                                                        $priceChange = $apiCost - $data->total_amount
+                                                    @endphp
+                                                    <span class="fw-bold">
+                                                        API Cost: {{ showAmount($apiCost)}} {{ __($general->cur_text) }}
+                                                    </span>
+                                                    @if($apiCost > $data->total_amount)
+                                                    <span class="fw-bold text-success">
+                                                        Profit: {{ showAmount(($priceChange))}} {{ __($general->cur_text) }}
+                                                    </span>
+                                                    @else
+                                                    <span class="fw-bold text-danger">
+                                                        Loss: {{ showAmount(($priceChange))}} {{ __($general->cur_text) }}
+                                                    </span>
+                                                    @endif
                                                 </td>
             
                                                 <td>
@@ -440,11 +454,11 @@
                                                 </td>
             
                                                 <td>
-                                                    @php echo $order->statusBadge; @endphp
+                                                    @php echo $data->statusBadge; @endphp
                                                 </td>
             
                                                 <td>
-                                                    <a href="{{ route('admin.report.order.details', $order->id) }}" class="btn btn-sm btn-outline--primary">
+                                                    <a href="{{ route('admin.report.order.details', $data->id) }}" class="btn btn-sm btn-outline--primary">
                                                         <i class="las la-desktop"></i> @lang('Details')
                                                     </a>
                                                 </td>

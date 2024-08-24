@@ -11,6 +11,12 @@ class Category extends Model
 {
     use HasFactory, GlobalStatus, Searchable;
 
+    protected $fillable = [
+        'name',
+        'api_id',
+        'api_provider_id'
+    ];
+
     public function products(){
         return $this->hasMany(Product::class);
     }

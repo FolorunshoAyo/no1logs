@@ -13,6 +13,19 @@ class Product extends Model
 {
     use HasFactory, GlobalStatus, Searchable;
 
+    protected $fillable = [
+        'category_id',
+        'name',
+        'description',
+        'price',
+        'api_price',
+        'image',
+        'api_id',
+        'api_provider_id',
+        'api_stock',
+        'name_api'
+    ];
+
     protected $appends = ['in_stock'];
  
     public function category(){

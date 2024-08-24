@@ -3,6 +3,7 @@
 namespace App\Lib;
 
 use App\Constants\FileInfo;
+use Illuminate\Support\Facades\Http;
 use Intervention\Image\Facades\Image;
 
 class FileManager
@@ -79,15 +80,37 @@ class FileManager
     */
 	public function __construct($file = null){
 		$this->file = $file;
+        $this->isImage = false;
+
 		if ($file) {
-			$imageExtensions = ['jpg','jpeg','png','JPG','JPEG','PNG'];
-			if (in_array($file->getClientOriginalExtension(), $imageExtensions)) {
-				$this->isImage = true;
-			}else{
-				$this->isImage = false;
-			}
+            if(is_string($file)){
+                $this->isImage = $this->isValidImage($file);
+            }elseif(method_exists($file, 'getClientOriginalExtension')){
+                $imageExtensions = ['jpg','jpeg','png','JPG','JPEG','PNG'];
+                if (in_array($file->getClientOriginalExtension(), $imageExtensions)) {
+                    $this->isImage = true;
+                }else{
+                    $this->isImage = false;
+                }
+            }
 		}
 	}
+
+    /**
+     * Check if the raw file data is a valid image
+     *
+     * @param string $fileData
+     * @return bool
+     */
+    protected function isValidImage($fileData)
+    {
+        try {
+            $image = Image::make($fileData);
+            return $image->mime() !== null;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 
     /**
     * File upload process
@@ -116,6 +139,32 @@ class FileManager
 	    	$this->uploadFile();
 	    }
 	}
+
+    /**
+     * Fetch a new image from a URL and replace an old image with the new one.
+     *
+     * @param string $imageUrl
+     * @param string|null $oldFilename
+     * @param string $key
+     * @return string
+     * @throws \Exception
+     */
+    public function fetchRemoteImage()
+    {
+        $path = $this->makeDirectory();
+        if (!$path) throw new \Exception('File could not been created.');
+
+        // Generate a unique filename for the new image
+        $filename = $this->getFileName();
+        $this->filename = $filename;
+
+        // Remove the old image and its thumbnail if they exist
+        if ($this->old) {
+            $this->removeFile($this->old);
+        }
+
+        $this->uploadImage();
+    }
 
     /**
     * Upload the file if this is image
@@ -217,8 +266,27 @@ class FileManager
     * @return string
     */
 	protected function getFileName(){
-		return uniqid() . time() . '.' . $this->file->getClientOriginalExtension();
+        if($this->isValidImage($this->file)){
+            $image = Image::make($this->file);
+            return uniqid() . time() . '.' . $this->getExtensionFromMimeType($image->mime());
+        }else{
+            return uniqid() . time() . '.' . $this->file->getClientOriginalExtension();
+        }
 	}
+
+    protected function getExtensionFromMimeType($mimeType) {
+        $mimeTypes = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/bmp' => 'bmp',
+            'image/webp' => 'webp',
+            'image/svg+xml' => 'svg',
+            'image/tiff' => 'tiff',
+        ];
+    
+        return isset($mimeTypes[$mimeType]) ? $mimeTypes[$mimeType] : 'jpg'; // Default to jpg if unknown
+    }
 
     /**
     * Get access of array from fileInfo method as non-static method.

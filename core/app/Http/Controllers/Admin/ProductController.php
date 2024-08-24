@@ -13,8 +13,8 @@ use Illuminate\Http\Response;
 class ProductController extends Controller{
 
     public function all(){
-        $pageTitle = 'All Products';
-        $products = Product::searchable(['name', 'category:name'])->filter(['category_id'])->orderBy('id', 'DESC')->with('category', 'productDetails')->paginate(getPaginate());
+        $pageTitle = 'All Products (Excluding API)';
+        $products = Product::searchable(['name', 'category:name'])->filter(['category_id'])->where('api_provider_id', '=', 0)->orderBy('id', 'DESC')->with('category', 'productDetails')->paginate(getPaginate());
         return view('admin.product.all',compact('pageTitle', 'products'));
     }
 

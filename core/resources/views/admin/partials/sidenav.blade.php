@@ -27,6 +27,13 @@
                         <span class="menu-title">@lang('Products')</span>
                     </a>
                 </li>
+
+                <li class="sidebar-menu-item {{menuActive('admin.api.all')}}">
+                    <a href="{{route('admin.api.all')}}" class="nav-link ">
+                        <i class="menu-icon las la-project-diagram"></i>
+                        <span class="menu-title">@lang('API Connection')</span>
+                    </a>
+                </li>
  
                 <li class="sidebar-menu-item sidebar-dropdown">
                     <a href="javascript:void(0)" class="{{menuActive('admin.users*',3)}}">

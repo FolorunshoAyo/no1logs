@@ -76,10 +76,7 @@ Route::middleware('admin')->group(function () {
         Route::post('update/{id}', 'update')->name('update');
         Route::post('delete/{id}', 'delete')->name('delete');
         Route::post('status/{id}', 'status')->name('status');
-        Route::get('accounts/{id}', 'accounts')->name('accounts');
-        Route::post('delete/account/{id}', 'deleteAccount')->name('delete.account');
-        Route::post('update/account', 'updateAccount')->name('update.account');
-        Route::get('/download/demo/txt', 'downloadDemoTxt')->name('download.demo.txt');
+        Route::get('cron/', 'apiCronJob')->name('api-cron-job');
     });
 
     // Users Manager
