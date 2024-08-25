@@ -6,6 +6,7 @@ use App\Constants\Status;
 use App\Http\Controllers\Controller;
 use App\Lib\FormProcessor;
 use App\Models\AdminNotification;
+use App\Models\ApiProvider;
 use App\Models\Deposit;
 use App\Models\GatewayCurrency;
 use App\Models\Order;
@@ -460,6 +461,48 @@ class PaymentController extends Controller
             return to_route('user.orders')->withNotify($notify);
         }
         
+    }
+
+    public function depositApiInsert(){
+        $request->validate([
+            'gateway' => 'required',
+            'currency' => 'required',
+            'id' => 'required',
+            'qty' => 'required|integer|gt:0',
+        ]);
+
+        $qty = $request->qty; 
+        $isWallet = null;
+
+        if($request->gateway === "wallet"){
+            $isWallet = true;
+        }
+
+        $product = Product::active()->whereHas('category', function($category){
+            return $category->active();
+        })->findOrFail($request->id);
+
+        if($product->api_stock < $qty){
+            $notify[] = ['error', "Not enough stock available. Only {$product->in_stock} quantity left"];
+            return back()->withNotify($notify);
+        }
+
+        $amount = ($product->price * $qty);
+        $final_amo = $amount;
+
+        $user = auth()->user();
+
+        if($user->wallet->balance < $amount){
+            $notify[] = ['error', "Insufficient balance"];
+            return back()->withNotify($notify);
+        }
+
+        // Retrive api provider information
+        $apiProvider = ApiProvider::find($product->api_provider_id);
+
+        if($apiProvider->type == 'CMSNT'){
+            $data = curl_get($apiProvider->domain."/api/BResource.php?username=".$apiProvider->username."&password=".$apiProvider->password."&id=".$product->api_id.'&amount='.$amount);
+        }
     }
 
     public function depositConfirm()

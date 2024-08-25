@@ -23,7 +23,8 @@ class Product extends Model
         'api_id',
         'api_provider_id',
         'api_stock',
-        'name_api'
+        'name_api',
+        'status'
     ];
 
     protected $appends = ['in_stock'];

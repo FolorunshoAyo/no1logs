@@ -80,6 +80,7 @@ Route::middleware('auth')->name('user.')->group(function () {
             Route::post('render-purchase-modal', 'renderPurchaseModal')->name('purchase.modal');
             Route::post('new-insert', 'newDepositInsert')->name('new.insert');
             Route::post('new-confirm', 'newDepositConfirm')->name('new.confirm');
+            Route::post('api-insert', 'depositApiInsert')->name('api.insert');
             Route::post('insert', 'depositInsert')->name('insert');
             Route::get('confirm', 'depositConfirm')->name('confirm');
             Route::get('manual', 'manualDepositConfirm')->name('manual.confirm');

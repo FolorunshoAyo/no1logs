@@ -6,7 +6,7 @@
                     <h6 class="modal-title">@lang('Purchase')</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('user.deposit.insert') }}" method="POST">
+                <form action="{{ route('user.deposit.api.insert') }}" method="POST">
                     @csrf
                     <input type="hidden" name="id">
                     <input type="hidden" name="currency">
@@ -47,9 +47,9 @@
                                 <select class="form--control form-select" name="gateway" required>
                                     <option value="">@lang('Select One')</option>
                                     <option value="wallet" data-gateway="{'currency': 'NGN'}">Pay with wallet (Balance: NGN {{ number_format($wallet->balance, 2) }})</option>
-                                    @foreach($gatewayCurrency as $data)
+                                    {{-- @foreach($gatewayCurrency as $data)
                                         <option value="{{$data->method_code}}" data-gateway="{{ $data }}">{{$data->name}}</option>
-                                    @endforeach
+                                    @endforeach --}}
                                 </select>
                             </div>
                             <div class="form-group col-md-6">

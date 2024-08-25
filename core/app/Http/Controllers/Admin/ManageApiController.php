@@ -92,7 +92,7 @@ class ManageApiController extends Controller
         $rule['domain'] = "required|url";
 
         $request->validate([
-            'type' => 'required|in:no1logs,CSMNT'
+            'type' => 'required|in:no1logs,CMSNT'
         ]);
 
         if($postData['type'] === "no1logs"){
@@ -269,6 +269,25 @@ class ManageApiController extends Controller
         return back()->withNotify($notify);
     }
 
+    public function delete($id){ 
+		$apiProvider = ApiProvider::findOrFail($id);
+
+        if($apiProvider){
+            $isRemove = $apiProvider->delete();
+            if($isRemove){
+                Category::where("api_provider_id", $apiProvider->id)->delete();
+                Product::where("api_provider_id", $apiProvider->id)->delete();
+
+                $notify[] = ['success', 'API deleted successfully'];
+            }
+
+        }else{
+            $notify[] = ['error', 'API details not found'];
+        }
+
+	    return back()->withNotify($notify);
+	}
+
     public function apiCronJob(){
         if(time() > gs('check_api_cron_time')){
             if((time() - gs('check_api_cron_time')) < 5){
@@ -308,6 +327,8 @@ class ManageApiController extends Controller
 
                             if(!$existingCategory){
                                 $productImage = remoteFileUploader($category['image'], getFilePath('product'), getFileSize('product'));
+                            }else{
+                                $productImage = $existingCategory->products->first()->image ?? "favicon.png";
                             }
                         
                             $categoryRecord = Category::updateOrCreate(
@@ -320,7 +341,7 @@ class ManageApiController extends Controller
                                 ]
                             );
                             
-                           foreach($category['accounts'] as $product){
+                            foreach($category['accounts'] as $product){
                                 $product_name = htmlspecialchars_decode($purifier->purify($product['name']));
                                 $ck = (float) htmlspecialchars_decode($purifier->purify($product['price'])) * $apiProvider->ck_connect_api / 100;
                                 $price = (float) htmlspecialchars_decode($purifier->purify($product['price'])) + $ck;
@@ -334,10 +355,25 @@ class ManageApiController extends Controller
                                 $existingProduct = Product::where($productConditions)->first(); 
 
                                 if($existingProduct){
+                                    $price = $existingProduct->price;
+
+                                    if($apiProvider->status_update_ck == 1){
+                                        $ck = (float) htmlspecialchars_decode($purifier->purify($product['price'])) * $apiProvider->ck_connect_api / 100;
+                                        $price = (float) htmlspecialchars_decode($purifier->purify($product['price'])) + $ck;
+                                    }
+
+                                    $product_name = $existingProduct->name;
+                                    $product_content = $existingProduct->description;
+
+                                    if($apiProvider->auto_rename_api){
+                                        $product_name = htmlspecialchars_decode($purifier->purify($product['name']));
+                                        $product_content = htmlspecialchars_decode($purifier->purify($product['description']));
+                                    }
+
                                     $existingProduct->update([
                                         'category_id' => $category_id,
                                         'name' => $product_name,
-                                        'description' => htmlspecialchars_decode($purifier->purify($product['description'])),
+                                        'description' => $product_content,
                                         'price' => format_currency($price),
                                         'api_price' => format_currency($product['price']),
                                         'status' => gs("default_api_product_status"),
@@ -363,7 +399,7 @@ class ManageApiController extends Controller
                                         ]
                                     );
                                 }
-                           }
+                            }
                         //    return $productImage;
                         }
                     }
