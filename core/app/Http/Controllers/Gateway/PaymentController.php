@@ -463,7 +463,7 @@ class PaymentController extends Controller
         
     }
 
-    public function depositApiInsert(){
+    public function depositApiInsert(Request $request){
         $request->validate([
             'gateway' => 'required',
             'currency' => 'required',
@@ -483,7 +483,7 @@ class PaymentController extends Controller
         })->findOrFail($request->id);
 
         if($product->api_stock < $qty){
-            $notify[] = ['error', "Not enough stock available. Only {$product->in_stock} quantity left"];
+            $notify[] = ['error', "Not enough stock available. Only {$product->api_stock} quantity left"];
             return back()->withNotify($notify);
         }
 
@@ -501,7 +501,56 @@ class PaymentController extends Controller
         $apiProvider = ApiProvider::find($product->api_provider_id);
 
         if($apiProvider->type == 'CMSNT'){
-            $data = curl_get($apiProvider->domain."/api/BResource.php?username=".$apiProvider->username."&password=".$apiProvider->password."&id=".$product->api_id.'&amount='.$amount);
+            $data = curl_get($apiProvider->domain."/api/BResource.php?username=".$apiProvider->username."&password=".$apiProvider->password."&id=".$product->api_id.'&amount='.$qty);
+            $data = json_decode($data, true);
+
+            if($data['status'] == 'error'){
+                $notify[] = ['error', $data['msg']];
+                return back()->withNotify($notify);
+            }
+
+            $api_trx_id = $data['data']['trans_id'];
+            $accounts = $data['data']['lists'];
+
+            // Add new order
+            $order = new Order();
+            $order->user_id = $user->id;
+            $order->status = '1';
+            $order->total_amount = $amount;
+            $order->save();
+
+            // Add new wallet debit history
+            $data = new WalletHistory();
+            $data->wallet_id = $user->wallet->id;
+            $data->trx = getTrx();
+            $data->api_trx_id = $api_trx_id;
+            $data->api_provider_id = $apiProvider->id;
+            $data->order_id = $order->id;
+            $data->transaction_type = '2';
+            $data->final_amo = $final_amo;
+            $data->amount = $amount;
+            $data->status = '1';
+            $data->method_code = '';
+            $data->method_currency = 'NGN';
+            $data->save();
+
+            foreach($accounts as $account){
+                $product_detail = new ProductDetail();
+                $product_detail->product_id = $product->id;
+                $product_detail->is_sold = 1;
+                $product_detail->details = $account['account'];
+                $product_detail->save();
+
+                $item = new OrderItem();
+                $item->order_id = $order->id;
+                $item->product_id = $product->id;
+                $item->product_detail_id = $product_detail->id;
+                $item->price = $product->price;
+                $item->save();
+            }
+
+            $notify[] = ['success', "Order placed Successfully"];
+            return to_route('user.order.details', $order->id)->withNotify($notify);
         }
     }
 

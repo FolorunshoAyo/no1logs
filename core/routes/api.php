@@ -20,7 +20,7 @@ Route::controller('ApiController')->prefix('v1')->name('api.')->middleware(['api
     Route::get('/product/details/{id?}', 'productDetails')->name('product.details');
     Route::get('/product/{id}', 'getSingleProduct')->name('getProduct');
     Route::get('/account/{id}', 'getSingleAccount')->name('getAccount');
-    Route::post('/order/new', 'newOrder')->name('new.order');
+    Route::get('/order/new', 'newOrder')->name('new.order');
     Route::get('/order/details/{id}', 'orderDetails')->name('get.order');
     Route::get('/check-balance', 'balance')->name('balance');
     // Route::get('/check-accounts', 'checkAccounts')->name('checkAccounts');

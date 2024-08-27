@@ -67,7 +67,10 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        @if($product->api_provider_id === null)
+                                        @php
+                                        // dd(($product->api_provider_id ?? null) == 0 || $pageTitle !== 'Update Product');
+                                        @endphp
+                                        @if((($product->api_provider_id ?? null) == 0) || $pageTitle !== 'Update Product')
                                             <div class="col-lg-6">
                                                 <div class="form-group">
                                                     <div class="justify-content-between d-flex flex-wrap">

@@ -399,26 +399,29 @@
                                     <tbody>
                                         @forelse($allData as $data)
                                             @php 
-                                                $qty = @$data->orderItems->count();
-                                                $perUnitPrice = @$data->orderItems->first()->price;
+                                                $qty = @$data->order->orderItems->count();
+                                                $perUnitPrice = @$data->order->orderItems->first()->price;
                                             @endphp
                                             <tr>
                                                 <td>
-                                                    <span class="fw-bold">{{ $data->user->fullname }}</span>
+                                                    @php 
+                                                        //dd($data->order->orderItems) 
+                                                    @endphp
+                                                    <span class="fw-bold">{{ $data->wallet->user->fullname }}</span>
                                                     <br>
-                                                    <span class="small"> <a href="{{ appendQuery('search',$data->user->username) }}"><span>@</span>{{ $data->user->username }}</a> </span>
+                                                    {{-- <span class="small"> <a href="{{ appendQuery('search', $data->wallet->user->username) }}"><span>@</span>{{ $data->user->username }}</a> </span> --}}
                                                 </td>
             
                                                 <td>
                                                     <div>
-                                                        @if(isset($data->wallet->trx))
-                                                            <span class="d-block">Transaction Code: {{ $data->wallet->trx }}</span>
+                                                        @if(isset($data->trx))
+                                                            <span class="d-block">Transaction Code: {{ $data->trx }}</span>
                                                         @endif
-                                                        @if(isset($data->wallet->api_trx_id))
-                                                            <span class="d-block">API Transaction Code: {{ $data->wallet->api_trx_id }}</span>
+                                                        @if(isset($data->api_trx_id))
+                                                            <span class="d-block">API Transaction Code: {{ $data->api_trx_id }}</span>
                                                         @endif
-                                                        <span class="d-block">Product: {{ $data->orderItems->firstItem()->product->name }}</span>
-                                                        <span class="d-block">Product: {{ $data->orderItems->firstItem()->product->name }}</span>
+                                                        <span class="d-block">Product: {{ $data->order->orderItems->first()->product->name }}</span>
+                                                        <span class="d-block">Product (API): {{ $data->order->orderItems->first()->product->name_api }}</span>
                                                     </div>
                                                 </td>
             
@@ -429,21 +432,21 @@
                                                 <td class="budget">
                                                     <span class="d-block">{{ $qty }} @lang('Qty') x {{ showAmount($perUnitPrice) }} {{ __($general->cur_text) }}</span>
                                                     <span class="fw-bold">
-                                                        Payment: {{showAmount($data->total_amount)}} {{ __($general->cur_text) }}
+                                                        Payment: {{showAmount($data->order->total_amount)}} {{ __($general->cur_text) }}
                                                     </span>
                                                     @php
-                                                        $apiCost = $data->orderItems->firstItem()->product->api_price * $qty;
-                                                        $priceChange = $apiCost - $data->total_amount
+                                                        $apiCost = $data->order->orderItems->first()->product->api_price * $qty;
+                                                        $priceChange = $apiCost - $data->order->total_amount;
                                                     @endphp
-                                                    <span class="fw-bold">
+                                                    <span class="d-block fw-bold">
                                                         API Cost: {{ showAmount($apiCost)}} {{ __($general->cur_text) }}
                                                     </span>
-                                                    @if($apiCost > $data->total_amount)
-                                                    <span class="fw-bold text-success">
+                                                    @if($priceChange > $apiCost)
+                                                    <span class="d-block fw-bold text-success">
                                                         Profit: {{ showAmount(($priceChange))}} {{ __($general->cur_text) }}
                                                     </span>
                                                     @else
-                                                    <span class="fw-bold text-danger">
+                                                    <span class="d-block fw-bold text-danger">
                                                         Loss: {{ showAmount(($priceChange))}} {{ __($general->cur_text) }}
                                                     </span>
                                                     @endif
@@ -458,7 +461,7 @@
                                                 </td>
             
                                                 <td>
-                                                    <a href="{{ route('admin.report.order.details', $data->id) }}" class="btn btn-sm btn-outline--primary">
+                                                    <a href="{{ route('admin.report.order.details', $data->order->id) }}" class="btn btn-sm btn-outline--primary">
                                                         <i class="las la-desktop"></i> @lang('Details')
                                                     </a>
                                                 </td>

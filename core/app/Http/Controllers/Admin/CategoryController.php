@@ -8,8 +8,8 @@ use App\Models\Category;
 class CategoryController extends Controller{
 
     public function all(){
-        $pageTitle = 'All Categories';
-        $categories = Category::searchable(['name'])->with('products.productDetails')->paginate(getPaginate());
+        $pageTitle = 'All Categories (Excluding API)';
+        $categories = Category::searchable(['name'])->where('api_provider_id', '=', 0)->with('products.productDetails')->paginate(getPaginate());
         return view('admin.category.all',compact('pageTitle', 'categories'));
     }
     

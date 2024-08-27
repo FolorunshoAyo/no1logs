@@ -44,7 +44,7 @@ class ApiController extends Controller
                         return [
                             'id' => $product->id,
                             'name' => $product->name,
-                            'image' => $product->image,
+                            'image' => asset("assets/images/product/" . $product->image),
                             'description' => $product->description,
                             'in_stock' => $product->in_stock,
                             'price' => $product->price
@@ -54,8 +54,12 @@ class ApiController extends Controller
             ];
         });
 
+        $response = [
+            "status" => "success",
+            "categories" => $categories
+        ];
 
-        return response()->json($categories, 200);
+        return response()->json($response, 200);
     }
 
     public function categoryProducts($category = null, $id = 0){
@@ -196,33 +200,10 @@ class ApiController extends Controller
 
     public function newOrder(Request $request)
     {   
-        $request->validate([
-            'product_details_ids' => 'required',
+        $validatedData = $request->validate([
+            'id' => 'required|integer',
+            'amount' => 'required|integer'
         ]);
- 
-        $product_details_ids = explode(",", $request->product_details_ids);
-        $first_product_details = ProductDetail::find($product_details_ids[0]);
-        if($first_product_details){
-            $product = Product::find($first_product_details->product_id);
-            if($product){
-                $product_price = $product->price;
-                $amount = $product_price * count($product_details_ids);
-                $isWallet = null;
-                $single_price = $amount / count($product_details_ids);
-            }else{
-                return response()->json(['error' => 'This product does not exist'], 422);
-            }
-        }else{
-            return response()->json(['error' => 'One or more of the selected products does not exist'], 422);
-        }
-
-        foreach($product_details_ids as $product_detail_id){
-            $product_detail = ProductDetail::find($product_detail_id)->where("is_sold", 1);
-
-            if(!$product_detail){
-                return response()->json(['error' => "One or more of the selected account has been sold."], 422);
-            }
-        }
 
         $user = $request->attributes->get('authenticatedUser');
 
@@ -232,70 +213,129 @@ class ApiController extends Controller
             }
         }
 
-        $final_amo = $amount;
+        $product = Product::active()->whereHas('category', function($category){
+            return $category->active();
+        })->findOrFail($validatedData->id);
 
-        $order = new Order();
-        $order->user_id = $user->id;
-        if($isWallet) $order->status = '1';
-        $order->total_amount = $amount;
-        $order->save();
+        if($product->api_provider_id !== 0){
+            if($product->apiProvider->type === "CMSNT"){
+                $data = curl_get($apiProvider->domain."/api/BResource.php?username=".$apiProvider->username."&password=".$apiProvider->password."&id=".$product->api_id.'&amount='.$qty);
+                $data = json_decode($data, true);
 
-        $data = new WalletHistory();
-        $data->wallet_id = $user->wallet->id;
-        $data->order_id = $order->id;
-        $data->transaction_type = '2';
-        $data->final_amo = $final_amo;
-        $data->amount = $amount;
-        $data->status = '1';
-        $data->method_code = '';
-        $data->method_currency = 'NGN';
-        $data->from_api = "1";
-        $data->save();
-        
+                if($data['status'] == 'error'){
+                    $notify[] = ['error', $data['msg']];
+                    return back()->withNotify($notify);
+                }
 
-        foreach($product_details_ids as $product_detail_id){
-            $item = new OrderItem();
-            $item->order_id = $order->id;
-            $item->product_id = $request->id;
-            $item->product_detail_id = $product_detail_id;
-            $item->price = $single_price;
-            $item->save();
-        }
-        
-        $order->status = Status::ORDER_PAID;
-        $order->save();
+                $api_trx_id = $data['data']['trans_id'];
+                $accounts = $data['data']['lists'];
 
-        $items = @$order->orderItems->pluck('product_detail_id')->toArray() ?? [];
-        ProductDetail::whereIn('id', $items)->update(['is_sold'=>Status::YES]);
+                // Add new order
+                $order = new Order();
+                $order->user_id = $user->id;
+                $order->status = '1';
+                $order->total_amount = $amount;
+                $order->save();
 
-        $wallet = $user->wallet;
-        // Credit wallet here
-        $wallet->balance -= $amount;
-        $wallet->save(); 
+                // Add new wallet debit history
+                $data = new WalletHistory();
+                $data->wallet_id = $user->wallet->id;
+                $data->trx = getTrx();
+                $data->api_trx_id = $api_trx_id;
+                $data->api_provider_id = $apiProvider->id;
+                $data->order_id = $order->id;
+                $data->transaction_type = '2';
+                $data->final_amo = $final_amo;
+                $data->amount = $amount;
+                $data->status = '1';
+                $data->method_code = '';
+                $data->method_currency = 'NGN';
+                $data->save();
 
-        // Send back order details
-        $order = Order::find($order->id);
+                foreach($accounts as $account){
+                    $product_detail = new ProductDetail();
+                    $product_detail->product_id = $product->id;
+                    $product_detail->is_sold = 1;
+                    $product_detail->details = $account['account'];
+                    $product_detail->save();
 
-        $initials = [];
-        $orderItems = OrderItem::whereIn('id', $order->orderItems->pluck('id') ?? [])
-        ->with('product', 'productDetail')
-        ->get()
-        ->map(function ($orderItem, $index) use (&$initials){
-            if($index == 0){
-                $initials['category_name'] = $orderItem->product->category->name;
-                $initials['product_name'] = $orderItem->product->name;
+                    $item = new OrderItem();
+                    $item->order_id = $order->id;
+                    $item->product_id = $product->id;
+                    $item->product_detail_id = $product_detail->id;
+                    $item->price = $product->price;
+                    $item->save();
+                }
             }
-            return [
-                "id" => $orderItem->productDetail->id,
-                "details" => $orderItem->productDetail->details,
-                "url" => $orderItem->productDetail->url
-            ];
-        });
+        }else{
+            $final_amo = $amount;
+
+            $order = new Order();
+            $order->user_id = $user->id;
+            if($isWallet) $order->status = '1';
+            $order->total_amount = $amount;
+            $order->save();
+
+            $data = new WalletHistory();
+            $data->wallet_id = $user->wallet->id;
+            $data->order_id = $order->id;
+            $data->transaction_type = '2';
+            $data->final_amo = $final_amo;
+            $data->amount = $amount;
+            $data->status = '1';
+            $data->method_code = '';
+            $data->method_currency = 'NGN';
+            $data->from_api = "1";
+            $data->save();
+
+            $unsoldProductDetails = $product->unsoldProductDetails;
+
+            for($i = 0; $i < $qty; $i++){
+                if(@!$unsoldProductDetails[$i]){
+                    continue;
+                }
+                $item = new OrderItem();
+                $item->order_id = $order->id;
+                $item->product_id = $product->id;
+                $item->product_detail_id = $unsoldProductDetails[$i]->id;
+                $item->price = $product->price;
+                $item->save();
+            }
+            
+            $order->status = Status::ORDER_PAID;
+            $order->save();
+
+            $items = @$order->orderItems->pluck('product_detail_id')->toArray() ?? [];
+            ProductDetail::whereIn('id', $items)->update(['is_sold'=>Status::YES]);
+
+            $wallet = $user->wallet;
+            // Credit wallet here
+            $wallet->balance -= $amount;
+            $wallet->save(); 
+
+            // Send back order details
+            $order = Order::find($order->id);
+
+            $initials = [];
+            $orderItems = OrderItem::whereIn('id', $order->orderItems->pluck('id') ?? [])
+            ->with('product', 'productDetail')
+            ->get()
+            ->map(function ($orderItem, $index) use (&$initials){
+                if($index == 0){
+                    $initials['category_name'] = $orderItem->product->category->name;
+                    $initials['product_name'] = $orderItem->product->name;
+                }
+                return [
+                    "id" => $orderItem->productDetail->id,
+                    "details" => $orderItem->productDetail->details,
+                ];
+            });
+        }
 
         $result = [
             "status" => "success",
             "order" => [
-                "id" => $order->id,
+                "trans_id" => getTrx(),    
                 "category_name" => $initials['category_name'],
                 "product_name" => $initials['product_name'],
                 "order_items" => $orderItems
