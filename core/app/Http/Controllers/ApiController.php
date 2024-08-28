@@ -207,19 +207,17 @@ class ApiController extends Controller
 
         $user = $request->attributes->get('authenticatedUser');
 
-        if($isWallet){
-            if($user->wallet->balance < $amount){
-                return response()->json(['error' => 'Insufficient Balance'], 200);
-            }
-        }
-
         $product = Product::active()->whereHas('category', function($category){
             return $category->active();
-        })->findOrFail($validatedData->id);
+        })->findOrFail($request->id);
+
+        if($user->wallet->balance < ($product->price * $request->amount)){
+            return response()->json(['error' => 'Insufficient Balance'], 200);
+        }
 
         if($product->api_provider_id !== 0){
             if($product->apiProvider->type === "CMSNT"){
-                $data = curl_get($apiProvider->domain."/api/BResource.php?username=".$apiProvider->username."&password=".$apiProvider->password."&id=".$product->api_id.'&amount='.$qty);
+                $data = curl_get($apiProvider->domain."/api/BResource.php?username=".$apiProvider->username."&password=".$apiProvider->password."&id=".$request->id.'&amount='.$request->amount);
                 $data = json_decode($data, true);
 
                 if($data['status'] == 'error'){
@@ -266,18 +264,119 @@ class ApiController extends Controller
                     $item->price = $product->price;
                     $item->save();
                 }
+
+                // Send back order details
+                $order = Order::find($order->id);
+
+                $wallet = $user->wallet;
+                // Credit wallet here
+                $wallet->balance -= $amount;
+                $wallet->save(); 
+
+                $initials = [];
+                $orderItems = OrderItem::whereIn('id', $order->orderItems->pluck('id') ?? [])
+                ->with('product', 'productDetail')
+                ->get()
+                ->map(function ($orderItem, $index) use (&$initials){
+                    if($index == 0){
+                        $initials['category_name'] = $orderItem->product->category->name;
+                        $initials['product_name'] = $orderItem->product->name;
+                    }
+                    return [
+                        "id" => $orderItem->productDetail->id,
+                        "details" => $orderItem->productDetail->details,
+                    ];
+                });
+            }else{
+                $data = curl_get($apiProvider->domain."/api/v1/order/new?api_token=".$apiProvider->token."&id=".$product->api_id.'&amount='.$qty);
+                $data = json_decode($data, true);
+
+                if(isset($data['error'])){
+                    $notify[] = ['error', $data['error']];
+                    return back()->withNotify($notify);
+                }
+
+                $api_trx_id = $data['order']['trans_id'];
+                $accounts = $data['order']['order_items'];
+
+                // Add new order
+                $order = new Order();
+                $order->user_id = $user->id;
+                $order->status = '1';
+                $order->total_amount = $amount;
+                $order->save();
+
+                // Add new wallet debit history
+                $data = new WalletHistory();
+                $data->wallet_id = $user->wallet->id;
+                $data->trx = getTrx();
+                $data->api_trx_id = $api_trx_id;
+                $data->api_provider_id = $apiProvider->id;
+                $data->order_id = $order->id;
+                $data->transaction_type = '2';
+                $data->final_amo = $final_amo;
+                $data->amount = $amount;
+                $data->status = '1';
+                $data->method_code = '';
+                $data->method_currency = 'NGN';
+                $data->save();
+
+                foreach($accounts as $account){
+                    $product_detail = new ProductDetail();
+                    $product_detail->product_id = $product->id;
+                    $product_detail->is_sold = 1;
+                    $product_detail->details = $account['details'];
+                    $product_detail->save();
+
+                    $item = new OrderItem();
+                    $item->order_id = $order->id;
+                    $item->product_id = $product->id;
+                    $item->product_detail_id = $product_detail->id;
+                    $item->price = $product->price;
+                    $item->save();
+                }
+
+                // Send back order details
+                $order = Order::find($order->id);
+
+                $wallet = $user->wallet;
+                // Credit wallet here
+                $wallet->balance -= $amount;
+                $wallet->save(); 
+
+                $initials = [];
+                $orderItems = OrderItem::whereIn('id', $order->orderItems->pluck('id') ?? [])
+                ->with('product', 'productDetail')
+                ->get()
+                ->map(function ($orderItem, $index) use (&$initials){
+                    if($index == 0){
+                        $initials['category_name'] = $orderItem->product->category->name;
+                        $initials['product_name'] = $orderItem->product->name;
+                    }
+                    return [
+                        "id" => $orderItem->productDetail->id,
+                        "details" => $orderItem->productDetail->details,
+                    ];
+                });
             }
         }else{
+            if($product->in_stock < $request->amount){
+                return response()->json(['error' => 'Not enough stock available. Only '.$product->in_stock.' quantity left'], 200);
+                return back()->withNotify($notify);
+            }
+
+            $amount = ($product->price * $request->amount);
             $final_amo = $amount;
 
             $order = new Order();
             $order->user_id = $user->id;
-            if($isWallet) $order->status = '1';
+            $order->status = '1';
             $order->total_amount = $amount;
             $order->save();
 
             $data = new WalletHistory();
             $data->wallet_id = $user->wallet->id;
+            $data->trx = getTrx();
             $data->order_id = $order->id;
             $data->transaction_type = '2';
             $data->final_amo = $final_amo;
@@ -285,12 +384,11 @@ class ApiController extends Controller
             $data->status = '1';
             $data->method_code = '';
             $data->method_currency = 'NGN';
-            $data->from_api = "1";
             $data->save();
 
             $unsoldProductDetails = $product->unsoldProductDetails;
 
-            for($i = 0; $i < $qty; $i++){
+            for($i = 0; $i < $request->amount; $i++){
                 if(@!$unsoldProductDetails[$i]){
                     continue;
                 }
@@ -335,7 +433,7 @@ class ApiController extends Controller
         $result = [
             "status" => "success",
             "order" => [
-                "trans_id" => getTrx(),    
+                "trans_id" => $data->trx,    
                 "category_name" => $initials['category_name'],
                 "product_name" => $initials['product_name'],
                 "order_items" => $orderItems

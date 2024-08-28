@@ -551,6 +551,62 @@ class PaymentController extends Controller
 
             $notify[] = ['success', "Order placed Successfully"];
             return to_route('user.order.details', $order->id)->withNotify($notify);
+        }else{
+            $data = curl_get($apiProvider->domain."/api/v1/order/new?api_token=".$apiProvider->token."&id=".$product->api_id.'&amount='.$qty);
+            $data = json_decode($data, true);
+
+            if(isset($data['error'])){
+                $notify[] = ['error', $data['error']];
+                return back()->withNotify($notify);
+            }
+
+            $api_trx_id = $data['order']['trans_id'];
+            $accounts = $data['order']['order_items'];
+
+            // Add new order
+            $order = new Order();
+            $order->user_id = $user->id;
+            $order->status = '1';
+            $order->total_amount = $amount;
+            $order->save();
+
+            // Add new wallet debit history
+            $data = new WalletHistory();
+            $data->wallet_id = $user->wallet->id;
+            $data->trx = getTrx();
+            $data->api_trx_id = $api_trx_id;
+            $data->api_provider_id = $apiProvider->id;
+            $data->order_id = $order->id;
+            $data->transaction_type = '2';
+            $data->final_amo = $final_amo;
+            $data->amount = $amount;
+            $data->status = '1';
+            $data->method_code = '';
+            $data->method_currency = 'NGN';
+            $data->save();
+
+            foreach($accounts as $account){
+                $product_detail = new ProductDetail();
+                $product_detail->product_id = $product->id;
+                $product_detail->is_sold = 1;
+                $product_detail->details = $account['details'];
+                $product_detail->save();
+
+                $item = new OrderItem();
+                $item->order_id = $order->id;
+                $item->product_id = $product->id;
+                $item->product_detail_id = $product_detail->id;
+                $item->price = $product->price;
+                $item->save();
+            }
+
+            $wallet = $user->wallet;
+            // Credit wallet here
+            $wallet->balance -= $amount;
+            $wallet->save(); 
+
+            $notify[] = ['success', "Order placed Successfully"];
+            return to_route('user.order.details', $order->id)->withNotify($notify);
         }
     }
 
