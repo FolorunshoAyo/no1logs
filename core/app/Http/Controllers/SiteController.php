@@ -22,8 +22,8 @@ use Illuminate\Support\Facades\Hash;
 class SiteController extends Controller
 {
     public function index(){
-        $test_password = "123456";
-        dd(Hash::make($test_password));
+        // $test_password = "123456";
+        // dd(Hash::make($test_password));
         
         $reference = @$_GET['reference'];
         if ($reference) {

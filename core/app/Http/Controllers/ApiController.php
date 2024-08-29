@@ -41,14 +41,25 @@ class ApiController extends Controller
                 'name' => $category->name,
                 'products' => $category->products->map(
                     function ($product) {
-                        return [
-                            'id' => $product->id,
-                            'name' => $product->name,
-                            'image' => asset("assets/images/product/" . $product->image),
-                            'description' => $product->description,
-                            'in_stock' => $product->in_stock,
-                            'price' => $product->price
-                        ];
+                        if($product->api_provider_id != 0){
+                            return [
+                                'id' => $product->id,
+                                'name' => $product->name,
+                                'image' => asset("assets/images/product/" . $product->image),
+                                'description' => $product->description,
+                                'in_stock' => $product->api_stock,
+                                'price' => $product->price
+                            ];
+                        }else{
+                            return [
+                                'id' => $product->id,
+                                'name' => $product->name,
+                                'image' => asset("assets/images/product/" . $product->image),
+                                'description' => $product->description,
+                                'in_stock' => $product->in_stock,
+                                'price' => $product->price
+                            ];
+                        }
                     }
                 )
             ];
@@ -72,15 +83,26 @@ class ApiController extends Controller
             ->searchable(['name', 'description'])
             ->with('productDetails')
             ->orderBy('id', 'DESC')->get()
-            ->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'image' => $product->image,
-                    'description' => $product->description,
-                    'in_stock' => $product->in_stock,
-                    'price' => $product->price
-                ];
+            ->map(function ($product) { 
+                if($product->api_provider_id != 0){
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'image' => asset("assets/images/product/" . $product->image),
+                        'description' => $product->description,
+                        'in_stock' => $product->api_stock,
+                        'price' => $product->price
+                    ];
+                }else{
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'image' => asset("assets/images/product/" . $product->image),
+                        'description' => $product->description,
+                        'in_stock' => $product->in_stock,
+                        'price' => $product->price
+                    ];
+                }
             });
 
             $result = [
@@ -125,13 +147,23 @@ class ApiController extends Controller
         ->limit(5)
         ->get()
         ->map(function ($product) {
-            return [
-                'id' => $product->id,
-                'image' => $product->image,
-                'description' => $product->description,
-                'in_stock' => $product->in_stock,
-                'price' => $product->price
-            ];
+            if($product->api_provider_id != 0){
+                return [
+                    'id' => $product->id,
+                    'image' => asset("assets/images/product/" . $product->image),
+                    'description' => $product->description,
+                    'in_stock' => $product->api_stock,
+                    'price' => $product->price
+                ];
+            }else{
+                return [
+                    'id' => $product->id,
+                    'image' => asset("assets/images/product/" . $product->image),
+                    'description' => $product->description,
+                    'in_stock' => $product->in_stock,
+                    'price' => $product->price
+                ];
+            }
         });
 
         $result['product'] = [
@@ -158,7 +190,7 @@ class ApiController extends Controller
             $result = [
                 "id" => $product->id,
                 "name" => $product->name,
-                "image" => $product->image,
+                'image' => asset("assets/images/product/" . $product->image),
                 "description" => $product->description,
                 "price" => $product->price
             ];

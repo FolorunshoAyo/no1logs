@@ -117,18 +117,21 @@ function showAmount($amount, $decimal = 2, $separate = true, $exceptZeros = fals
 }
 
 function format_currency($amount, $hasSymbol = false){
+    $result = "";
     if($hasSymbol){
-        return removeCurrencySymbol($amount) / gs('cur_rate');
+        $result = removeCurrencySymbol($amount) / gs('cur_rate');
     }else{
-        return $amount / gs('cur_rate');
+        $result = $amount / gs('cur_rate');
     }
+    
+    return round($result);
 }
 
 function removeCurrencySymbol($string) {
     $cleanedString = preg_replace('/[\p{Sc}]/u', '', $string);
     $cleanedString = preg_replace('/[^\d.]/', '', $cleanedString);
 
-    return (int) $cleanedString;
+    return (float) $cleanedString;
 }
 
 function removeElement($array, $value)
