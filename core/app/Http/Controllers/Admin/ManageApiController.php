@@ -360,6 +360,7 @@ class ManageApiController extends Controller
                                     if($apiProvider->status_update_ck == 1){
                                         $ck = (float) htmlspecialchars_decode($purifier->purify($product['price'])) * $apiProvider->ck_connect_api / 100;
                                         $price = (float) htmlspecialchars_decode($purifier->purify($product['price'])) + $ck;
+                                        $price = format_currency($price);
                                     }
 
                                     $product_name = $existingProduct->name;
@@ -374,7 +375,7 @@ class ManageApiController extends Controller
                                         'category_id' => $category_id,
                                         'name' => $product_name,
                                         'description' => $product_content,
-                                        'price' => format_currency($price),
+                                        'price' => $price,
                                         'api_price' => format_currency($product['price']),
                                         'status' => gs("default_api_product_status"),
                                         'api_id' => $product['id'],
