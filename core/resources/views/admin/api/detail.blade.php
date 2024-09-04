@@ -409,7 +409,7 @@
                                                     @endphp
                                                     <span class="fw-bold">{{ $data->wallet->user->fullname }}</span>
                                                     <br>
-                                                    {{-- <span class="small"> <a href="{{ appendQuery('search', $data->wallet->user->username) }}"><span>@</span>{{ $data->user->username }}</a> </span> --}}
+                                                    <span class="small"> <a href="{{ appendQuery('search', $data->wallet->user->username) }}"><span>@</span>{{ $data->wallet->user->username }}</a> </span>
                                                 </td>
             
                                                 <td>
@@ -436,12 +436,13 @@
                                                     </span>
                                                     @php
                                                         $apiCost = $data->order->orderItems->first()->product->api_price * $qty;
-                                                        $priceChange = $apiCost - $data->order->total_amount;
+                                                        $orderAmount = $data->order->total_amount;
+                                                        $priceChange = $data->order->total_amount - $apiCost;
                                                     @endphp
                                                     <span class="d-block fw-bold">
                                                         API Cost: {{ showAmount($apiCost)}} {{ __($general->cur_text) }}
                                                     </span>
-                                                    @if($priceChange > $apiCost)
+                                                    @if($orderAmount > $apiCost)
                                                     <span class="d-block fw-bold text-success">
                                                         Profit: {{ showAmount(($priceChange))}} {{ __($general->cur_text) }}
                                                     </span>

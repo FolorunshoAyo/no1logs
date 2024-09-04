@@ -549,6 +549,11 @@ class PaymentController extends Controller
                 $item->save();
             }
 
+            $wallet = $user->wallet;
+            // Credit wallet here
+            $wallet->balance -= $amount;
+            $wallet->save(); 
+
             $notify[] = ['success', "Order placed Successfully"];
             return to_route('user.order.details', $order->id)->withNotify($notify);
         }else{
