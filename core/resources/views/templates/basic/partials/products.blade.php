@@ -5,12 +5,12 @@
     @if($product->api_provider_id === 0)
         <div class="catalog-item__content">
             <h6 class="catalog-item__title">
-                @php $text = $product->name.' | '.strLimit(strip_tags($product->description), 270); @endphp
-                @php echo $text;  @endphp 
+                {{ $product->name }}
                 <a href="{{ route('product.details', $product->id) }}" class="catalog-item__link">
                     
                 </a>
             </h6>
+            <p class="catalog-item__info catalog-item__instock">{{ strLimit(strip_tags($product->description), 270) }}</p>
             <div class="catalog-item__info d-flex align-items-center">
                 <p class="catalog-item__instock">@lang('In Stock'): <span class="pcs">{{ getAmount($product->in_stock) }} @lang('qty').</span></p>
                 <p class="catalog-item__price">
@@ -45,12 +45,12 @@
     @else
         <div class="catalog-item__content">
             <h6 class="catalog-item__title">
-                @php $text = $product->name.' | '.strLimit(strip_tags($product->description), 270); @endphp
-                @php echo $text;  @endphp 
+                {{ $product->name }}
                 <a href="{{ route('product.details', $product->id) }}" class="catalog-item__link">
                     
                 </a>
             </h6>
+            <p class="catalog-item__info catalog-item__instock">{{ strLimit(strip_tags($product->description), 270) }}</p>
             <div class="catalog-item__info d-flex align-items-center">
                 <p class="catalog-item__instock">@lang('In Stock'): <span class="pcs">{{ getAmount($product->api_stock) }} @lang('qty').</span></p>
                 <p class="catalog-item__price">
@@ -58,7 +58,7 @@
                 </p>
                 @if($product->api_stock)
                     <button class="btn btn--base btn--sm purchaseBtn" 
-                        data-text="{{ $text }}"
+                        data-text="{{ $product->name }}"
                         data-price="{{ showAmount($product->price).' '.$general->cur_text }}"
                         data-qty="{{ getAmount($product->api_stock).' qty' }}"
                         data-id="{{ $product->id }}"
