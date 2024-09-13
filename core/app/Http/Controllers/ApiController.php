@@ -248,13 +248,13 @@ class ApiController extends Controller
         }
 
         if($product->api_provider_id !== 0){
+            $apiProvider = $product->apiProvider;
             if($product->apiProvider->type === "CMSNT"){
                 $data = curl_get($apiProvider->domain."/api/BResource.php?username=".$apiProvider->username."&password=".$apiProvider->password."&id=".$request->id.'&amount='.$request->amount);
                 $data = json_decode($data, true);
 
                 if($data['status'] == 'error'){
-                    $notify[] = ['error', $data['msg']];
-                    return back()->withNotify($notify);
+                    return response()->json(['error' => $data['msg']], 200);
                 }
 
                 $api_trx_id = $data['data']['trans_id'];
@@ -324,8 +324,7 @@ class ApiController extends Controller
                 $data = json_decode($data, true);
 
                 if(isset($data['error'])){
-                    $notify[] = ['error', $data['error']];
-                    return back()->withNotify($notify);
+                    return response()->json(['error' => $data['error']], 200);
                 }
 
                 $api_trx_id = $data['order']['trans_id'];

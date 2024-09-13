@@ -2988,6 +2988,7 @@ fieldset:disabled .btn {
 
 .dropdown--menu {
     position: absolute;
+    height: calc(100vh - 150px);
     top: calc(100% + 16px);
     left: 0;
     background-color: hsl(var(--white));
@@ -3009,8 +3010,8 @@ fieldset:disabled .btn {
 
 @media screen and (max-width: 424px) {
     .dropdown--menu {
-        width: 180px;
-        left: unset;
+        width: calc(180px + 100%);
+        left: 0;
         right: 0;
     }
 }

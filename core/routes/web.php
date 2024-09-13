@@ -19,6 +19,7 @@ Route::controller('TicketController')->prefix('ticket')->name('ticket.')->group(
 
 Route::controller('SiteController')->group(function () {
     Route::get('/contact', 'contact')->name('contact');
+    Route::get('/api/contact', 'apiContact')->name('api.contact');
     Route::post('/contact', 'contactSubmit');
     Route::get('/change/{lang?}', 'changeLanguage')->name('lang');
 

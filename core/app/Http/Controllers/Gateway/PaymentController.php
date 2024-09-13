@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Gateway;
 
-use App\Constants\Status;
-use App\Http\Controllers\Controller;
-use App\Lib\FormProcessor;
-use App\Models\AdminNotification;
-use App\Models\ApiProvider;
-use App\Models\Deposit;
-use App\Models\GatewayCurrency;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Product;
-use App\Models\ProductDetail;
 use App\Models\User;
+use App\Models\Order;
+use App\Models\Deposit;
+use App\Models\Product;
+use App\Constants\Status;
+use App\Models\OrderItem;
+use App\Lib\FormProcessor;
+use App\Models\ApiProvider;
+use App\Models\ProductDetail;
 use App\Models\WalletHistory;
 use Illuminate\Http\Request; 
+use App\Models\GatewayCurrency;
+use App\Models\AdminNotification;
+use App\Http\Controllers\Controller;
 
 class PaymentController extends Controller 
 {
@@ -613,61 +613,8 @@ class PaymentController extends Controller
             $notify[] = ['success', "Order placed Successfully"];
             return to_route('user.order.details', $order->id)->withNotify($notify);
         }
-    }
-
-    public function depositConfirm()
-    {
-        $track = session()->get('Track');
-        $deposit = Deposit::where('trx', $track)->where('status',Status::PAYMENT_INITIATE)->orderBy('id', 'DESC')->with('gateway')->firstOrFail();
-
-        if ($deposit->method_code >= 1000) {
-            return to_route('user.deposit.manual.confirm');
-        }
-
-
-        $dirName = $deposit->gateway->alias;
-        $new = __NAMESPACE__ . '\\' . $dirName . '\\ProcessController';
-
-        $data = $new::process($deposit);
-        $data = json_decode($data);
-
-
-        if (isset($data->error)) {
-            $notify[] = ['error', $data->message];
-            return to_route(gatewayRedirectUrl())->withNotify($notify);
-        }
-        if (isset($data->redirect)) {
-            return redirect($data->redirect_url);
-        }
-
-        // for Stripe V3
-        if(@$data->session){
-            $deposit->btc_wallet = $data->session->id;
-            $deposit->save();
-        }
-
-        $pageTitle = 'Payment Confirm';
-        return view($this->activeTemplate . $data->view, compact('data', 'pageTitle', 'deposit'));
-    }
-
-
-    public static function userDataUpdate($deposit,$isManual = null)
-    {   
-        if ($deposit->status == Status::PAYMENT_INITIATE || $deposit->status == Status::PAYMENT_PENDING) {
-            $deposit->status = Status::PAYMENT_SUCCESS;
-            $deposit->save();
-           
-            $user = User::find($deposit->user_id);
-
-            $order = $deposit->order;
-            $order->status = Status::ORDER_PAID;
-            $order->save();
-
-            $items = @$order->orderItems->pluck('product_detail_id')->toArray() ?? [];
-            ProductDetail::whereIn('id', $items)->update(['is_sold'=>Status::YES]);
-
-            if (!$isManual) { 
-                $adminNotification = new AdminNotification();
+      
+);
                 $adminNotification->user_id = $user->id;
                 $adminNotification->title = 'Payment successful via '.$deposit->gatewayCurrency()->name;
                 $adminNotification->click_url = urlPath('admin.deposit.successful');

@@ -52,7 +52,14 @@ class SiteController extends Controller
         return view($this->activeTemplate . 'contact',compact('pageTitle','user', 'sections'));
     }
 
-
+    public function apiContact()
+    {
+        $pageTitle = "API Contact";
+        $user = auth()->user();
+        $sections  = Page::where('tempname', $this->activeTemplate)->where('slug', 'contact')->first();
+        return view($this->activeTemplate . 'api_contact',compact('pageTitle','user', 'sections'));
+    }
+    
     public function contactSubmit(Request $request)
     {
         $this->validate($request, [
