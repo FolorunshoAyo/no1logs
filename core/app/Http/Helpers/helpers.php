@@ -9,6 +9,7 @@ use App\Lib\FileManager;
 use App\Models\Frontend;
 use App\Constants\Status;
 use App\Models\Extension;
+use App\Models\Product;
 use Illuminate\Support\Str;
 use App\Models\GeneralSetting;
 use Illuminate\Support\Facades\Http;
@@ -114,6 +115,79 @@ function showAmount($amount, $decimal = 2, $separate = true, $exceptZeros = fals
         }
     }
     return $printAmount;
+}
+
+function getRandomName()
+{
+    $names = [
+        // Hausa Names
+        'Aminu', 'Fatimah', 'Ibrahim', 'Aisha', 'Sani', 'Hauwa', 'Muhammad', 'Zainab',
+        'Usman', 'Maryam', 'Aliyu', 'Ruqayyah', 'Abubakar', 'Hassan', 'Suleiman', 'Amina',
+        'Hassanat', 'Yusuf', 'Nura', 'Bilkisu', 'Sadiya', 'Kabir', 'Asma', 'Ibrahim',
+        
+        // Igbo Names
+        'Chinedu', 'Ngozi', 'Ifeoma', 'Chukwuemeka', 'Emeka', 'Chioma', 'Obinna', 'Uchechi',
+        'Ijeoma', 'Amaka', 'Chinonso', 'Nneka', 'Ugochukwu', 'Ebele', 'Ogechi', 'Nnamdi',
+        'Ifeanyichukwu', 'Chizor', 'Adaeze', 'Kelechi', 'Onyeka', 'Azuka', 'Ijeoma', 'Nkiruka',
+        
+        // Edo Names
+        'Osagie', 'Ehi', 'Iyare', 'Ose', 'Ovia', 'Eweka', 'Iye', 'Emmanuel',
+        'Ehiaghe', 'Omozele', 'Ohen', 'Eghosa', 'Uyi', 'Ida', 'Orhue', 'Imo',
+        'Erhie', 'Aikhionbare', 'Aire', 'Ehinomen', 'Okunbor', 'Egom', 'Eghosa', 'Uzev',
+        
+        // Yoruba Names
+        'Adebayo', 'Ngozi', 'Temidayo', 'Aisha', 'Bolanle', 'Ayodele', 'Oluwaseun', 'Titi',
+        'Oluwadamilola', 'Ifeoluwa', 'Folake', 'Olamide', 'Toyin', 'Femi', 'Opeoluwa', 'Sola',
+        'Temitayo', 'Olawale', 'Bisi', 'Kehinde', 'Adenike', 'Funmi', 'Akin', 'Yewande',
+    ];
+
+    $randomName = $names[array_rand($names)];
+
+    return substr($randomName, 0, 3) . '...';
+}
+
+function getRandomState()
+{
+    $states = [
+        'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 
+        'Borno', 'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 
+        'Gombe', 'Imo', 'Jigawa', 'Kaduna', 'Kano', 'Kogi', 'Kwara', 
+        'Lagos', 'Nasarawa', 'Niger', 'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 
+        'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara'
+    ];
+
+    return $states[array_rand($states)];
+}
+
+function generateRandomTimeAgo()
+{
+    $now = Carbon::now();
+    $randomDate = $now->copy()->subMinutes(rand(1, 10)); // Random date within the last 7 days
+
+    return $randomDate->diffForHumans();
+}
+
+function generatePopupHtml()
+{
+    $name = getRandomName();
+    // $state = getRandomState();
+    
+    // Retrieve a random product from the database
+    $product = Product::where('status', 1)
+    ->inRandomOrder()->first();
+    $productName = $product ? $product->name : 'Unknown Product'; // Fallback if no product is found
+
+    $timeAgo = generateRandomTimeAgo(); // Dynamically generate the "time ago" string
+
+    return "
+    <div class='popup-item imageOnLeft textOnly clearfix'>
+        <span class='close-btn'><i class='fas fa-times'></i></span>
+        <div class='salert-content-wrap'>
+            $name purchased $productName<br>
+            <small class='time'>$timeAgo</small>
+        </div>
+    </div>
+    ";
 }
 
 function format_currency($amount, $hasSymbol = false){

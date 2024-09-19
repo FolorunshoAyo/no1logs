@@ -251,6 +251,12 @@ class SiteController extends Controller
         return view($this->activeTemplate . 'category_products', compact('pageTitle', 'category', 'products','sections', 'userWallet'));
     }
 
+    public function generateRandomOrderPopup()
+    {
+        $html = generatePopupHtml();
+        return response()->json(['html' => $html]);
+    }
+
     public function productDetails(Request $request, $id){
         $user = auth()->user();
         $userWallet = null;

@@ -38,6 +38,7 @@ Route::controller('SiteController')->group(function () {
     Route::get('/products/{category?}/{id?}', 'products')->name('products');
     Route::get('/category-products/{slug?}/{id?}', 'categoryProducts')->name('category.products');
     Route::get('/product/details/{id}', 'productDetails')->name('product.details');
+    Route::get('/random-order-alert', 'generateRandomOrderPopup')->name('product.order.popup');
 
     Route::get('/{slug}', 'pages')->name('pages');
     Route::get('/', 'index')->name('home');
