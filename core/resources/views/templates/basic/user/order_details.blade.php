@@ -47,4 +47,27 @@
         {{ paginateLinks($orderItems) }}
     </div>
 </div>
+<div class="container mt-5">
+    <h5 class="mt-4 mb-4">Watch Our Videos</h5>
+    <div class="row g-4">
+        <div class="col-md-6 mb-4">
+            <div class="video-wrapper">
+                <iframe width="100%"
+                    src="https://www.youtube.com/embed/R41_SXiMs8Q?si=6GOID4gr5zVcA1vo" title="YouTube video player"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="video-wrapper">
+                <iframe width="100%"
+                src="https://www.youtube.com/embed/bddwDnWnw-E?si=nTThP8Xk4kmxLip1" title="YouTube video player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
