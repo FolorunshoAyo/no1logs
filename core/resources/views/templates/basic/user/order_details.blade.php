@@ -58,6 +58,10 @@
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
             </div>
+            <div class="caption mt-2">
+                <h5>How to login using cookies</h5>
+                <p>Fastest and easy way to access accounts that needs cookies to login</p>
+            </div>
         </div>
         <div class="col-md-6 mb-4">
             <div class="video-wrapper">
@@ -67,6 +71,10 @@
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
             </div>
+        </div>
+        <div class="caption mt-2">
+            <h5>How to fund www.no1logs.com easily</h5>
+            <p>Easy and simple steps to login and fund or make purchase on no1logs</p>
         </div>
     </div>
 </div>
