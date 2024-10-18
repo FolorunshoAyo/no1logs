@@ -6,7 +6,7 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-12">
-                <div class="section-heading">
+                <div class="section-heading style-left">
                     <span class="section-heading__subtitle">{{ __(@$testimonial->data_values->heading) }}</span>
                     <h2 class="section-heading__title">{{ __(@$testimonial->data_values->subheading) }}</h2>
                 </div>
@@ -17,13 +17,20 @@
                 <div class="testimonails owl-carousel">
                     @foreach ($testimonials as $item)
                         <div class="testimonial-item">
+                            <div class="testimonial-item__stars">
+                                <i class="las la-star"></i>
+                                <i class="las la-star"></i>
+                                <i class="las la-star"></i>
+                                <i class="las la-star"></i>
+                                <i class="las la-star"></i>
+                            </div>
                             <p class="testimonial-item__desc">
                                 {{ __(@$item->data_values->quote) }}
                             </p>
                             <div class="testimonial-item__author">
-                                <div class="testimonial-item__author-thumb">
+                                <!-- <div class="testimonial-item__author-thumb">
                                     <img src="{{ getImage('assets/images/frontend/testimonial/' . @$item->data_values->image, '60x60') }}" alt="@lang('image')">
-                                </div>
+                                </div> -->
                                 <h6 class="testimonial-item__author-name"> {{ __(@$item->data_values->name) }}</h6>
                                 <span class="testimonial-item__author-designation"> {{ __(@$item->data_values->designation) }}</span>
                             </div>

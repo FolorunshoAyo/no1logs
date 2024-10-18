@@ -1,7 +1,7 @@
 @extends($activeTemplate . 'layouts.frontend')
 
 @section('content')
-<section class="catalog-section section-bg py-{{ @$categories->count() ? 120 : 60 }}">
+<section class="catalog-section section-bg py-60">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-xxl-10 col-xl-11">

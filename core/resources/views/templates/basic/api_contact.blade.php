@@ -4,7 +4,7 @@
         $contactContent = getContent('contact_us.content', true);
     @endphp
 
-    <section class="contact-section py-120">
+    <section class="contact-section py-60">
         <div class="container">
             <div class="row align-items-center flex-wrap-reverse">
                 <div class="col-lg-5 col-xl-4">

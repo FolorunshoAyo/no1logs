@@ -98,9 +98,9 @@
         }
       });
       // if no file name return
-      if ("" == FileName) {
-        selector.find("li").eq(0).addClass("active");
-      }
+      // if ("" == FileName) {
+      //   selector.find("li").eq(0).addClass("active");
+      // }
     }
     if ($('ul').length) {
       dynamicActiveMenuClass($('ul'));

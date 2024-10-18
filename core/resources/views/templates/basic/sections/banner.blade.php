@@ -2,7 +2,7 @@
     $banner = getContent('banner.content', true);
     $bannerIcon = getContent('banner_icon.content', true);
 @endphp
-<section class="banner-section">
+<!--<section class="banner-section">
     <div class="banner-section-bg-img">
         <img src="{{ asset($activeTemplateTrue . 'images/banner-bg.png') }}" alt="">
     </div>
@@ -37,6 +37,53 @@
                         <a href="{{ @$banner->data_values->second_button_url }}"  class="btn btn-outline--base">
                             {{ __(@$banner->data_values->second_button_name) }}
                         </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>-->
+<section class="hero__area hero__height d-flex align-items-center" style="background-color: #eeedf2;">
+    <div class="hero__shape">
+        <img class="circle" src="{{ asset('assets/images/frontend/banner/hero-circle.png') }}" alt="circle">
+        <img class="square" src="{{ asset('assets/images/frontend/banner/hero-square.png') }}" alt="circle">
+    </div>
+    <div class="container">
+        <div class="row py-5 py-lg-0">
+            <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                <div class="hero__content">
+                    <h2 class="hero__title">
+                        Buy Premium
+                        Social Media
+                        Accounts
+                        <span>with No1logs</span>
+                    </h2>
+                    <p>Unlock the Power of Established Social Media Presence with NO 1 Logs</p>
+                    <div class="hero__search">
+                        <form action="#" class="search-form">
+                            <div class="hero__search-inner d-flex">
+                                <div class="hero__search-input">
+                                    <span><i class="las la-search"></i></span>
+                                    <input type="text" placeholder="Search...">
+                                </div>
+                                <button type="submit" class="btn btn--new-base ml-20">Search</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="banner-content__buttons mt-5">    
+                        <a href="{{ @$banner->data_values->first_button_url }}" class="btn btn--new-base">
+                            {{ __(@$banner->data_values->first_button_name) }}
+                        </a>
+                        <a href="{{ @$banner->data_values->second_button_url }}"  class="btn btn-outline--base">
+                            {{ __(@$banner->data_values->second_button_name) }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6 col-lg-6 col-md-12 mt-5 mt-lg-0">
+                <div class="hero__thumb-wrapper scene ml-70">
+                    <div class="hero__thumb one">
+                        <img class="layer" src="{{ asset('assets/images/frontend/banner/hero.png') }}" alt="">
                     </div>
                 </div>
             </div>

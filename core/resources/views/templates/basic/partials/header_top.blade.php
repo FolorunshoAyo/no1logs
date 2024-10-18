@@ -1,4 +1,4 @@
-<div class="top-header d-none d-lg-block">
+<div class="top-header d-none">
     <div class="container">
         <div class="top-header__inner flex-between">
             <a class="navbar-brand logo" href="{{ route('home') }}">

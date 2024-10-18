@@ -32,7 +32,7 @@
         <div class="loader-p"></div>
     </div>
 
-    <div class="body-overlay"></div>
+    <!--<div class="body-overlay"></div>-->
     <div class="sidebar-overlay"></div>
     <a class="scroll-top"><i class="las la-long-arrow-alt-up"></i></a>
 
@@ -240,6 +240,18 @@
     <script>
         (function($) {
             "use strict";
+
+            var searchModal = $('#search');
+            var mobileNav = $('#menu');
+
+            $('.search-box-popup-button').on('click', function() {
+                searchModal.modal('show');
+            });
+
+            $('#mobile-nav-button').on('click', function() {
+                mobileNav.modal('show');
+            });
+
             $(".langSel").on("change", function() {
                 window.location.href = "{{ route('home') }}/change/" + $(this).val();
             });

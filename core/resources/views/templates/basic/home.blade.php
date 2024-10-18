@@ -5,4 +5,5 @@
             @include($activeTemplate . 'sections.' . $sec)
         @endforeach
     @endif
+    @include($activeTemplate . 'sections.faq')
 @endsection
