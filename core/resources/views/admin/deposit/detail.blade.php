@@ -80,7 +80,10 @@
                 <div class="card-body">
                     <h5 class="card-title mb-50 border-bottom pb-2">@lang('User Payment Information')</h5>
                     @if($details != null)
-                        @foreach((array) json_decode(json_decode($details)) as $val)
+                        @php
+                            $info = $source === "wallet"? json_decode(json_decode($details)) :  json_decode($details);
+                        @endphp
+                        @foreach((array) $info as $val)
                             @if($deposit->method_code >= 1000)
                             <div class="row mt-4">
                                 <div class="col-md-12">
@@ -108,7 +111,7 @@
                         <div class="row mt-4">
                             <div class="col-md-12">
                                 <button class="btn btn-outline--success btn-sm ms-1 confirmationBtn"
-                                data-action="{{ route('admin.deposit.approve', $deposit->id) }}"
+                                data-action="{{ route('admin.deposit.approve', $deposit->id) . "?source=".$source }}"
                                 data-question="@lang('Are you sure to approve this transaction?')"
                                 ><i class="las la-check-double"></i>
                                     @lang('Approve')
@@ -139,9 +142,10 @@
                         <i class="las la-times"></i>
                     </button>
                 </div>
-                <form action="{{ route('admin.deposit.reject')}}" method="POST">
+                <form action="{{ route('admin.deposit.reject') . "?source=".$source }}" method="POST">
                     @csrf
                     <input type="hidden" name="id">
+                    <input type="hidden" name="source" value="{{ $source }}">
                     <div class="modal-body">
                         <p>@lang('Are you sure to') <span class="fw-bold">@lang('reject')</span> <span class="fw-bold withdraw-amount text-success"></span> @lang('payment of') <span class="fw-bold withdraw-user"></span>?</p>
 

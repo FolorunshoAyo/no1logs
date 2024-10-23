@@ -21,8 +21,11 @@
                                 <option value>
                                     Select Payment Method
                                 </option>
-                                <option value="109">
+                                <!--<option value="109">
                                     Flutterwave
+                                </option>-->
+                                <option value="1000">
+                                    Manual
                                 </option>
                             </select>
                         </div>

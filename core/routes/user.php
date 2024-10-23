@@ -92,6 +92,8 @@ Route::middleware('auth')->name('user.')->group(function () {
             Route::any('fund-wallet', 'fundWallet')->name('fund');
             Route::post('insert', 'depositWalletInsert')->name('insert');
             Route::get('confirm', 'depositWalletConfirm')->name('confirm');
+            Route::get('manual-confirm', 'manualDepositWalletConfirm')->name('manual.confirm');
+            Route::post('manual-update', 'manualDepositWalletUpdate')->name('manual.update');
         });
     });
 });

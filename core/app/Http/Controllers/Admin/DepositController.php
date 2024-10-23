@@ -195,7 +195,7 @@ class DepositController extends Controller
         }
 
         $deposit = $walletHistory;
-        $pageTitle = $walletHistory->wallet->user->username . ' ' . ($walletHistory->status === 0? 'initiated request to credit' : 'credited') . ' wallet with ' . showAmount($walletHistory->amount) . ' ' . gs('cur_text');
+        $pageTitle = $walletHistory->wallet->user->username . ' ' . (($walletHistory->status === 0? 'initiated request to credit' : $walletHistory->status === 2)? 'is requesting to credit' : "") . ' wallet with ' . showAmount($walletHistory->amount) . ' ' . gs('cur_text');
         $details = ($walletHistory->detail != null) ? json_encode($walletHistory->detail) : null;
 
     } else {
@@ -207,46 +207,91 @@ class DepositController extends Controller
 
 
 
-    public function approve($id) 
+    public function approve(Request $request, $id) 
     {  
-        $deposit = Deposit::where('id',$id)->where('status',Status::PAYMENT_PENDING)->firstOrFail();
+        $source = $request->get('source', 'deposit');
 
-        PaymentController::userDataUpdate($deposit,true);
+        if ($source === 'deposit') {
+            $deposit = Deposit::where('id',$id)->where('status',Status::PAYMENT_PENDING)->firstOrFail();
 
-        $notify[] = ['success', 'Payment request approved successfully'];
+            PaymentController::userDataUpdate($deposit,true);
 
-        return to_route('admin.deposit.pending')->withNotify($notify);
+            $notify[] = ['success', 'Payment request approved successfully'];
+
+            return to_route('admin.deposit.pending')->withNotify($notify);
+
+        } elseif ($source === 'wallet') {
+            $deposit = WalletHistory::where('id', $id)->with(['wallet.user', 'gateway'])->first();
+
+            PaymentController::userWalletDataUpdate($deposit,true);
+
+            $notify[] = ['success', 'Payment request approved successfully'];
+
+            return to_route('admin.deposit.pending')->withNotify($notify);
+
+        } else {
+            abort(404, 'Invalid source specified');
+        }
     }
 
     public function reject(Request $request)
     { 
+        $source = $request->get('source', 'deposit');
+
         $request->validate([
             'id' => 'required|integer',
             'message' => 'required|string|max:255'
         ]);
-        $deposit = Deposit::where('id',$request->id)->firstOrFail();
 
-        $deposit->admin_feedback = $request->message;
-        $deposit->status = Status::PAYMENT_REJECT;
-        $deposit->save();
-        
-        $order = $deposit->order;
-        $items = @$order->orderItems->pluck('product_detail_id')->toArray() ?? [];
-        ProductDetail::whereIn('id', $items)->update(['is_sold'=>Status::NO]);
+        if ($source === 'deposit') {
+            $deposit = Deposit::where('id',$request->id)->firstOrFail();
 
-        notify($deposit->user, 'DEPOSIT_REJECT', [
-            'method_name' => $deposit->gatewayCurrency()->name,
-            'method_currency' => $deposit->method_currency,
-            'method_amount' => showAmount($deposit->final_amo),
-            'amount' => showAmount($deposit->amount),
-            'charge' => showAmount($deposit->charge),
-            'rate' => showAmount($deposit->rate),
-            'trx' => $deposit->trx,
-            'rejection_message' => $request->message
-        ]);
+            $deposit->admin_feedback = $request->message;
+            $deposit->status = Status::PAYMENT_REJECT;
+            $deposit->save();
 
-        $notify[] = ['success', 'Payment request rejected successfully'];
-        return  to_route('admin.deposit.pending')->withNotify($notify);
+            $order = $deposit->order;
+            $items = @$order->orderItems->pluck('product_detail_id')->toArray() ?? [];
+            ProductDetail::whereIn('id', $items)->update(['is_sold'=>Status::NO]);
+
+            notify($deposit->user, 'DEPOSIT_REJECT', [
+                'method_name' => $deposit->gatewayCurrency()->name,
+                'method_currency' => $deposit->method_currency,
+                'method_amount' => showAmount($deposit->final_amo),
+                'amount' => showAmount($deposit->amount),
+                'charge' => showAmount($deposit->charge),
+                'rate' => showAmount($deposit->rate),
+                'trx' => $deposit->trx,
+                'rejection_message' => $request->message
+            ]);
+
+            $notify[] = ['success', 'Payment request rejected successfully'];
+            return  to_route('admin.deposit.pending')->withNotify($notify);
+
+        } elseif ($source === 'wallet') {
+            $deposit = WalletHistory::where('id', $request->id)->with(['wallet.user', 'gateway'])->first();
+
+            $deposit->admin_feedback = $request->message;
+            $deposit->status = Status::PAYMENT_REJECT;
+            $deposit->save();
+
+            notify($deposit->user, 'DEPOSIT_REJECT', [
+                'method_name' => $deposit->gatewayCurrency()->name,
+                'method_currency' => $deposit->method_currency,
+                'method_amount' => showAmount($deposit->final_amo),
+                'amount' => showAmount($deposit->amount),
+                'charge' => showAmount($deposit->charge),
+                'rate' => showAmount($deposit->rate),
+                'trx' => $deposit->trx,
+                'rejection_message' => $request->message
+            ]);
+
+            $notify[] = ['success', 'Payment request rejected successfully'];
+            return  to_route('admin.deposit.pending')->withNotify($notify);
+
+        } else {
+            abort(404, 'Invalid source specified');
+        }
 
     }
 }
